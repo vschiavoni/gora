@@ -592,6 +592,7 @@
         <!--module>gora-sql</module-->
         <module>gora-tutorial</module>
         <module>sources-dist</module>
+        <module>gora-infinispan</module>
     </modules>
 
     <properties>
