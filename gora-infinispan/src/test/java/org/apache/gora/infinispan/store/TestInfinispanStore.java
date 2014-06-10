@@ -37,9 +37,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 
 /**
- * Test for CassandraStore.
+ * Test for {@link InfinispanStore}.
  */
-public class TestCassandraStore extends DataStoreTestBase{
+public class TestInfinispanStore extends DataStoreTestBase{
 
   private Configuration conf;
 
