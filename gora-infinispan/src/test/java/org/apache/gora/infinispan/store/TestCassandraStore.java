@@ -21,13 +21,13 @@
  * We extend DataStoreTestBase enabling us to run the entire base test
  * suite for Gora. 
  */
-package org.apache.gora.cassandra.store;
+package org.apache.gora.infinispan.store;
 
 import java.io.IOException;
 
-import org.apache.gora.cassandra.GoraCassandraTestDriver;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
+import org.apache.gora.infinispan.GoraInfinispanTestDriver;
 import org.apache.gora.infinispan.store.InfinispanStore;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -44,7 +44,7 @@ public class TestCassandraStore extends DataStoreTestBase{
   private Configuration conf;
 
   static {
-    setTestDriver(new GoraCassandraTestDriver());
+    setTestDriver(new GoraInfinispanTestDriver());
   }
 
   @Before
@@ -64,8 +64,8 @@ public class TestCassandraStore extends DataStoreTestBase{
     return DataStoreFactory.getDataStore(InfinispanStore.class, String.class, WebPage.class, conf);
   }
 
-  public GoraCassandraTestDriver getTestDriver() {
-    return (GoraCassandraTestDriver) testDriver;
+  public GoraInfinispanTestDriver getTestDriver() {
+    return (GoraInfinispanTestDriver) testDriver;
   }
 
 

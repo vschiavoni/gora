@@ -17,11 +17,11 @@
  */
 
 /**
- * @author lewismc
+ * @author valerio schiavoni
  *
  */
 
-package org.apache.gora.cassandra;
+package org.apache.gora.infinispan;
 
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.infinispan.store.InfinispanStore;
@@ -36,17 +36,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Helper class for third party tests using gora-cassandra backend. 
+ * Helper class for third party tests using gora-infinispan backend. 
  * @see GoraTestDriver for test specifics.
- * This driver is the base for all test cases that require an embedded Cassandra
- * server. In this case we draw on Hector's @see EmbeddedServerHelper.
- * It starts (setUp) and stops (tearDown) embedded Cassandra server.
+ * This driver is the base for all test cases that require an embedded Infinispan
+ * server. 
+ * It starts (setUp) and stops (tearDown) embedded Infinispan server.
  * 
- * @author lewismc
+
  */
 
-public class GoraCassandraTestDriver extends GoraTestDriver {
-  private static Logger log = LoggerFactory.getLogger(GoraCassandraTestDriver.class);
+public class GoraInfinispanTestDriver extends GoraTestDriver {
+  private static Logger log = LoggerFactory.getLogger(GoraInfinispanTestDriver.class);
   
   private String baseDirectory = "target/test";
 
@@ -61,7 +61,7 @@ public class GoraCassandraTestDriver extends GoraTestDriver {
     return baseDirectory;
   }
 
-  public GoraCassandraTestDriver() {
+  public GoraInfinispanTestDriver() {
     super(InfinispanStore.class);
   }
 	
