@@ -25,10 +25,6 @@ package org.apache.gora.infinispan;
 
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.infinispan.store.InfinispanStore;
-
-import java.io.File;
-
-
 // Logging imports
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +48,7 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
   }
 	
   /**
-   * Starts embedded Cassandra server.
+   * Starts embedded Infinispan server.
    *
    * @throws Exception
    * 	if an error occurs
@@ -67,7 +63,7 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
   }
 
   /**
-   * Stops embedded Cassandra server.
+   * Stops embedded Infinispan server.
    *
    * @throws Exception
    * 	if an error occurs
