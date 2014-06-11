@@ -1,0 +1,19 @@
+<gora-orm>
+
+  <table name="WebPage">
+    <family name="common"/>
+    <family name="content"/>
+    <family name="parsedContent"/>
+    <family name="outlinks"/>
+  </table>
+
+  <class name="org.apache.gora.examples.generated.WebPage" keyClass="java.lang.String" table="WebPage">
+    <field name="url" family="common" qualifier="u"/>
+    <field name="content" family="content"/>
+    <field name="parsedContent" family="parsedContent"/>
+    <field name="outlinks" family="outlinks"/>
+    <field name="headers" family="headers"/>
+    <field name="metadata" family="common" qualifier="metadata"/>
+  </class>
+
+</gora-orm>
