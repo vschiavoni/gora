@@ -59,7 +59,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    */
   private Map<K, T> buffer = Collections.synchronizedMap(new LinkedHashMap<K, T>());
   
-  /** The default constructor for CassandraStore */
+  /** The default constructor for InfinispanStore */
   public InfinispanStore() throws Exception {
   }
 
@@ -67,7 +67,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    * Initialize is called when then the call to 
    * {@link org.apache.gora.store.DataStoreFactory#createDataStore(Class<D> dataStoreClass, Class<K> keyClass, Class<T> persistent, org.apache.hadoop.conf.Configuration conf)}
    * is made. In this case, we merely delegate the store initialization to the 
-   * {@link org.apache.gora.cassandra.store.CassandraClient#initialize(Class<K> keyClass, Class<T> persistentClass)}. 
+   * {@link org.apache.gora.infinispan.store.InfinispanClient#initialize(Class<K> keyClass, Class<T> persistentClass)}. 
    */
   public void initialize(Class<K> keyClass, Class<T> persistent, Properties properties) {
     try {
