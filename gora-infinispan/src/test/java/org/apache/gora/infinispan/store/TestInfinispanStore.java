@@ -28,13 +28,11 @@ import java.io.IOException;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.GoraInfinispanTestDriver;
-import org.apache.gora.infinispan.store.InfinispanStore;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
-import org.junit.Ignore;
 
 /**
  * Test for {@link InfinispanStore}.
