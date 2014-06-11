@@ -68,38 +68,4 @@ public class TestInfinispanStore extends DataStoreTestBase{
     return (GoraInfinispanTestDriver) testDriver;
   }
 
-
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQuery() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryStartKey() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryEndKey() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryKeyRange() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryWebPageSingleKey() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryWebPageSingleKeyDefaultFields() throws IOException {}
-  @Ignore("GORA-299 o.a.g.cassandra.CassandraStore#newQuery() should not use query.setFields(getFieldsToQuery(null));")
-  @Override
-  public void testQueryWebPageQueryEmptyResults() throws IOException {}
-  @Ignore("GORA-154 delete() and deleteByQuery() methods are not implemented at CassandraStore, and always returns false or 0")
-  @Override
-  public void testDelete() throws IOException {}
-  @Ignore("GORA-154 delete() and deleteByQuery() methods are not implemented at CassandraStore, and always returns false or 0")
-  @Override
-  public void testDeleteByQuery() throws IOException {}
-  @Ignore("GORA-154 delete() and deleteByQuery() methods are not implemented at CassandraStore, and always returns false or 0")
-  @Override
-  public void testDeleteByQueryFields() throws IOException {}
-  @Ignore("GORA-298 Implement CassandraStore#getPartitions")
-  @Override
-  public void testGetPartitions() throws IOException {}
 }
