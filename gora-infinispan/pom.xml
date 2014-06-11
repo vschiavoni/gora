@@ -38,11 +38,13 @@
         <name>The Apache Software Foundation</name>
         <url>http://www.apache.org/</url>
     </organization>
+    <!-- 
     <scm>
         <url>http://svn.apache.org/viewvc/gora/trunk/gora-cassandra/</url>
         <connection>scm:svn:http://svn.apache.org/repos/asf/gora/trunk/gora-cassandra/</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/trunk/gora-cassandra/</developerConnection>
     </scm>
+     -->
     <issueManagement>
         <system>JIRA</system>
         <url>https://issues.apache.org/jira/browse/GORA</url>
@@ -54,7 +56,7 @@
 
     <properties>
         <osgi.import>*</osgi.import>
-        <osgi.export>org.apache.gora.cassandra*;version="${project.version}";-noimport:=true</osgi.export>
+        <osgi.export>org.apache.gora.infinispan*;version="${project.version}";-noimport:=true</osgi.export>
     </properties>
 
     <build>
@@ -96,7 +98,7 @@
     </build>
 
     <dependencies>
-
+		<!-- CHECK IF WE NEED THIS IN CASSANDRA -->
         <!-- OSX JDK 7 -->
         <!-- should be removed once fixed in Cassandra -->
         <dependency>
@@ -119,29 +121,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Cassandra Dependencies -->
-        <dependency>
-            <groupId>org.apache.cassandra</groupId>
-            <artifactId>cassandra-all</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.cassandra.deps</groupId>
-                    <artifactId>avro</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-       
-        <dependency>
-            <groupId>org.hectorclient</groupId>
-            <artifactId>hector-core</artifactId>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.cassandra</groupId>
-                        <artifactId>cassandra-all</artifactId>
-                    </exclusion>
-            </exclusions>
-        </dependency>
+        
         
         <!-- Misc Dependencies -->
         <dependency>
