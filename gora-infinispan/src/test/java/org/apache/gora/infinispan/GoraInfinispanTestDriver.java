@@ -28,8 +28,6 @@ import org.apache.gora.infinispan.store.InfinispanStore;
 
 import java.io.File;
 
-import org.apache.cassandra.io.util.FileUtils;
-import org.apache.cassandra.service.CassandraDaemon;
 
 // Logging imports
 import org.slf4j.Logger;
@@ -48,18 +46,6 @@ import org.slf4j.LoggerFactory;
 public class GoraInfinispanTestDriver extends GoraTestDriver {
   private static Logger log = LoggerFactory.getLogger(GoraInfinispanTestDriver.class);
   
-  private String baseDirectory = "target/test";
-
-  private CassandraDaemon cassandraDaemon;
-
-  private Thread cassandraThread;
-
-  /**
-   * @return temporary base directory of running cassandra instance
-   */
-  public String getBaseDirectory() {
-    return baseDirectory;
-  }
 
   public GoraInfinispanTestDriver() {
     super(InfinispanStore.class);
@@ -74,34 +60,10 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
   @Override
   public void setUpClass() throws Exception {
     super.setUpClass();
-    log.info("Starting embedded Cassandra Server...");
-    try {
-      cleanupDirectoriesFailover();
-      FileUtils.createDirectory(baseDirectory);
-      System.setProperty("log4j.configuration", "log4j-server.properties");
-      System.setProperty("cassandra.config", "cassandra.yaml");
-      
-      cassandraDaemon = new CassandraDaemon();
-      cassandraDaemon.init(null);
-      cassandraThread = new Thread(new Runnable() {
-	
-        public void run() {
-          try {
-            cassandraDaemon.start();
-          } catch (Exception e) {
-            log.error("Embedded casandra server run failed!", e);
-          }
-        }
-      });
-	
-      cassandraThread.setDaemon(true);
-      cassandraThread.start();
-    } catch (Exception e) {
-      log.error("Embedded casandra server start failed!", e);
-
+    log.info("Starting embedded Infinispan Server...");   
       // cleanup
       tearDownClass();
-    }
+    
   }
 
   /**
@@ -113,48 +75,9 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
   @Override
   public void tearDownClass() throws Exception {
     super.tearDownClass();
-    log.info("Shutting down Embedded Cassandra server...");
-    if (cassandraThread != null) {
-      cassandraDaemon.stop();
-      cassandraDaemon.destroy();
-      cassandraThread.interrupt();
-      cassandraThread = null;
-    }
-    cleanupDirectoriesFailover();
+    
   }  
 
-  /**
-   * Cleans up cassandra's temporary base directory.
-   *
-   * In case o failure waits for 250 msecs and then tries it again, 3 times totally.
-   */
-  public void cleanupDirectoriesFailover() {
-    int tries = 3;
-    while (tries-- > 0) {
-      try {
-        cleanupDirectories();
-        break;
-      } catch (Exception e) {
-        // ignore exception
-        try {
-          Thread.sleep(250);
-        } catch (InterruptedException e1) {
-          // ignore exception
-        }
-      }
-    }
-  }
 
-  /**
-   * Cleans up cassandra's temporary base directory.
-   *
-   * @throws Exception
-   * 	if an error occurs
-   */
-  public void cleanupDirectories() throws Exception {
-    File dirFile = new File(baseDirectory);
-    if (dirFile.exists()) {
-      FileUtils.deleteRecursive(dirFile);
-    }
-  }
+ 
 }
