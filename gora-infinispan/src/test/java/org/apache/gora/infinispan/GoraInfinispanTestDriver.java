@@ -23,15 +23,13 @@
 
 package org.apache.gora.infinispan;
 
-import org.apache.commons.configuration.INIConfiguration;
+import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
+
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.infinispan.store.InfinispanStore;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-
-import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-
 import org.infinispan.manager.EmbeddedCacheManager;
 // Logging imports
 import org.slf4j.Logger;
