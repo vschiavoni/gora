@@ -26,6 +26,8 @@ package org.apache.gora.infinispan;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 
 import org.apache.gora.GoraTestDriver;
+import org.apache.gora.examples.generated.Employee;
+import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.store.InfinispanStore;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
@@ -93,8 +95,9 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 					CacheMode.REPL_SYNC, false));
 			createHotRodServers(NCACHES, builder);
 			for (EmbeddedCacheManager m : cacheManagers) {
-				m.defineConfiguration("first", builder.build());
-
+				m.defineConfiguration(String.class.getCanonicalName(), builder.build());
+				m.defineConfiguration(Employee.class.getCanonicalName(), builder.build());
+				m.defineConfiguration(WebPage.class.getCanonicalName(), builder.build());
 			}
 
 		}
