@@ -33,37 +33,48 @@ import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
+import static org.junit.Assert.fail;
 
 /**
  * Test for {@link InfinispanStore}.
  */
-public class TestInfinispanStore extends DataStoreTestBase{
+public class TestInfinispanStore extends DataStoreTestBase {
 
-  private Configuration conf;
+	private Configuration conf;
 
-  static {
-    setTestDriver(new GoraInfinispanTestDriver());
-  }
+	static {
+		setTestDriver(new GoraInfinispanTestDriver());
+	}
 
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+	}
 
-  @SuppressWarnings("unchecked")
-  @Override
-  protected DataStore<String, Employee> createEmployeeDataStore() throws IOException {
-    return DataStoreFactory.getDataStore(InfinispanStore.class, String.class, Employee.class, conf);
-  }
+	@SuppressWarnings("unchecked")
+	@Override
+	protected DataStore<String, Employee> createEmployeeDataStore()
+			throws IOException {
+		return DataStoreFactory.getDataStore(InfinispanStore.class,
+				String.class, Employee.class, conf);
+	}
 
-  @SuppressWarnings("unchecked")
-  @Override
-  protected DataStore<String, WebPage> createWebPageDataStore() throws IOException {
-    return DataStoreFactory.getDataStore(InfinispanStore.class, String.class, WebPage.class, conf);
-  }
+	@SuppressWarnings("unchecked")
+	@Override
+	protected DataStore<String, WebPage> createWebPageDataStore()
+			throws IOException {
+		return DataStoreFactory.getDataStore(InfinispanStore.class,
+				String.class, WebPage.class, conf);
+	}
 
-  public GoraInfinispanTestDriver getTestDriver() {
-    return (GoraInfinispanTestDriver) testDriver;
-  }
+	public GoraInfinispanTestDriver getTestDriver() {
+		return (GoraInfinispanTestDriver) testDriver;
+	}
+
+	@Override
+	public void assertPut(Employee employee) throws IOException {
+		super.assertPut(employee);
+		fail("to complete");
+	}
 
 }
