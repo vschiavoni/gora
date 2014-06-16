@@ -23,57 +23,84 @@
 
 package org.apache.gora.infinispan;
 
+import org.apache.commons.configuration.INIConfiguration;
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.infinispan.store.InfinispanStore;
+import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+
+import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
+
+import org.infinispan.manager.EmbeddedCacheManager;
 // Logging imports
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Helper class for third party tests using gora-infinispan backend. 
- * @see GoraTestDriver for test specifics.
- * This driver is the base for all test cases that require an embedded Infinispan
- * server. 
- * It starts (setUp) and stops (tearDown) embedded Infinispan server.
+ * Helper class for third party tests using gora-infinispan backend.
  * 
-
+ * @see GoraTestDriver for test specifics. This driver is the base for all test
+ *      cases that require an embedded Infinispan server. It starts (setUp) and
+ *      stops (tearDown) embedded Infinispan server.
+ * 
  */
 
 public class GoraInfinispanTestDriver extends GoraTestDriver {
-  private static Logger log = LoggerFactory.getLogger(GoraInfinispanTestDriver.class);
-  
+	private static Logger log = LoggerFactory
+			.getLogger(GoraInfinispanTestDriver.class);
+	private InfinispanServerStarter infinispanServerInitializer;
 
-  public GoraInfinispanTestDriver() {
-    super(InfinispanStore.class);
-  }
-	
-  /**
-   * Starts embedded Infinispan server.
-   *
-   * @throws Exception
-   * 	if an error occurs
-   */
-  @Override
-  public void setUpClass() throws Exception {
-    super.setUpClass();
-    log.info("Starting embedded Infinispan Server...");   
-      // cleanup
-      tearDownClass();
-    
-  }
+	public GoraInfinispanTestDriver() {
+		super(InfinispanStore.class);
+	}
 
-  /**
-   * Stops embedded Infinispan server.
-   *
-   * @throws Exception
-   * 	if an error occurs
-   */
-  @Override
-  public void tearDownClass() throws Exception {
-    super.tearDownClass();
-    
-  }  
+	/**
+	 * Starts embedded Infinispan server.
+	 * 
+	 * @throws Exception
+	 *             if an error occurs
+	 */
+	@Override
+	public void setUpClass() throws Exception {
+		super.setUpClass();
+		log.info("Starting embedded Infinispan Server...");
 
+		infinispanServerInitializer = new InfinispanServerStarter();
+		try {
+			infinispanServerInitializer.createCacheManagers();
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
 
- 
+	/**
+	 * Stops embedded Infinispan server.
+	 * 
+	 * @throws Exception
+	 *             if an error occurs
+	 */
+	@Override
+	public void tearDownClass() throws Exception {
+		super.tearDownClass();
+		
+	}
+
+	class InfinispanServerStarter extends MultiHotRodServersTest {
+		private static final int NCACHES = 1;
+
+		@Override
+		protected void createCacheManagers() throws Throwable {
+			ConfigurationBuilder builder = hotRodCacheConfiguration(getDefaultClusteredCacheConfig(
+					CacheMode.REPL_SYNC, false));
+			createHotRodServers(NCACHES, builder);
+			for (EmbeddedCacheManager m : cacheManagers) {
+				m.defineConfiguration("first", builder.build());
+
+			}
+
+		}
+
+	}
+
 }
