@@ -118,7 +118,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
   
     InfinispanQuery<K, T> infinispanQuery = new InfinispanQuery<K, T>();
     infinispanQuery.setQuery(query);  
-    InfinispanResult<K, T> infinispanResult = new InfinispanResult<K, T>(this, query);   
+    InfinispanResult<K, T> infinispanResult = new InfinispanResult<K, T>(this, query, infinispanQuery);   
    
     return infinispanResult;
   }

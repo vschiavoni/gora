@@ -82,7 +82,7 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	 */
 	public void dropKeyspace() {
 		
-		//via hotrod we cannot delete caches, what do we do ? JMX again ? 
+		//via hot-rod we cannot delete caches, what do we do ? JMX again ? 
 		
 	}
 
