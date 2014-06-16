@@ -90,6 +90,10 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		throw new UnsupportedOperationException(
 				"ask the cachemanager to delete the cache with the given name/key?");
 	}
+	
+	public void putInCache(K key, T val){
+		this.cache.put(key, val);
+	}
 
 	/**
 	 * Obtain Schema/Keyspace name

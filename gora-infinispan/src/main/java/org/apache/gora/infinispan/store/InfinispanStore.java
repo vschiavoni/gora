@@ -210,7 +210,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    */
   @Override
   public void put(K key, T value) {
-    throw new UnsupportedOperationException("todo");
+    this.infinispanClient.putInCache(key, value);
   }
 
 
