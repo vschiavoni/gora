@@ -72,7 +72,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
   public void initialize(Class<K> keyClass, Class<T> persistent, Properties properties) {
     try {
       super.initialize(keyClass, persistent, properties);
-      this.infinispanClient.initialize(keyClass, persistent);
+      this.infinispanClient.initialize(keyClass, persistent, properties);
     } catch (Exception e) {
       LOG.error(e.getMessage());
       LOG.error(e.getStackTrace().toString());

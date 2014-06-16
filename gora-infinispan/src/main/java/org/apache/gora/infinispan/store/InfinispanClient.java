@@ -18,7 +18,10 @@
 
 package org.apache.gora.infinispan.store;
 
+import java.util.Properties;
+
 import org.apache.gora.persistency.impl.PersistentBase;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,16 +33,26 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	private Class<K> keyClass;
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
-
-	public void initialize(Class<K> keyClass, Class<T> persistentClass)
+	
+	private RemoteCache<Object, Object> cache; //TODO use as types the keyClass clazz
+	
+	public void initialize(Class<K> keyClass, Class<T> persistentClass, Properties properties)
 			throws Exception {
 		this.keyClass = keyClass;
 
 		this.persistentClass = persistentClass;
-
+		
+		/*
+		 * Search in the classpath a file hotrod-client.properties and used it to start the cache manager.
+		 * See here: http://docs.jboss.org/infinispan/7.0/apidocs/org/infinispan/client/hotrod/RemoteCacheManager.html#RemoteCacheManager(boolean)
+		 */
+		cacheManager = new RemoteCacheManager(true); // 
+		
+		cache = this.cacheManager.getCache(getKeyspaceName());
+		
 		// add keyspace to cluster
 		checkKeyspace();
-
+		
 	}
 
 	/**
@@ -47,21 +60,30 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	 * cache with the same name already exists.
 	 */
 	public boolean keyspaceExists() {
-		throw new UnsupportedOperationException("todo");
+		if (cacheManager.getCache(getKeyspaceName()) !=null){ 
+				return true;
+		}
+		return false;
 	}
 
 	/**
 	 * Check if keyspace already exists. If not, create it.
 	 */
 	public void checkKeyspace() {
-		throw new UnsupportedOperationException("todo");
+		RemoteCache<Object, Object> remoteCache = cacheManager.getCache(getKeyspaceName());
+		if (remoteCache == null ){
+			//TODO there is no way via hot-rod to create a remote cache..what do we do here ? 
+			// Pierre suggests to go via JMX
+		}
 	}
 
 	/**
 	 * Drop keyspace.
 	 */
 	public void dropKeyspace() {
-		throw new UnsupportedOperationException("todo");
+		
+		//via hotrod we cannot delete caches, what do we do ? JMX again ? 
+		
 	}
 
 	public void deleteByKey(K key) {
@@ -75,8 +97,7 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	 * @return Keyspace
 	 */
 	public String getKeyspaceName() {
-		throw new UnsupportedOperationException(
-				"map this to some ispn data structure");
+		return this.keyClass.getName();
 	}
 
 	public RemoteCacheManager getCacheManager() {
