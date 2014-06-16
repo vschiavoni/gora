@@ -2,7 +2,6 @@ package org.apache.gora.infinispan.query;
 
 import org.apache.gora.infinispan.store.InfinispanStore;
 import org.apache.gora.persistency.impl.PersistentBase;
-import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.QueryBase;
 import org.apache.gora.store.DataStore;
 import org.infinispan.client.hotrod.Search;
@@ -21,19 +20,9 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
         qf = Search.getQueryFactory(((InfinispanStore)this.dataStore).getClient().getCache());
 	}
 
-	private Query<K, T> query;
-
 	public InfinispanQuery() {
 		this(null);
 	}
-
-	public Query<K, T> getQuery() {
-		return query;
-	}
-
-	public void setQuery(Query<K, T> query) {
-		this.query = query;
-    }
 
     public void build(){
         if(q!=null)

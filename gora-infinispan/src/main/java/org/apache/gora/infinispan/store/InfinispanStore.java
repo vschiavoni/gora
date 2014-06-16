@@ -18,14 +18,6 @@ a * Licensed to the Apache Software Foundation (ASF) under one
 
 package org.apache.gora.infinispan.store;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import org.apache.gora.infinispan.query.InfinispanQuery;
 import org.apache.gora.infinispan.query.InfinispanResult;
 import org.apache.gora.persistency.impl.PersistentBase;
@@ -35,6 +27,9 @@ import org.apache.gora.query.Result;
 import org.apache.gora.store.impl.DataStoreBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * {@link org.apache.gora.infinispan.store.InfinispanStore} is the primary class 
@@ -63,12 +58,6 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
   public InfinispanStore() throws Exception {
   }
 
-  /** 
-   * Initialize is called when then the call to 
-   * {@link org.apache.gora.store.DataStoreFactory#createDataStore(Class<D> dataStoreClass, Class<K> keyClass, Class<T> persistent, org.apache.hadoop.conf.Configuration conf)}
-   * is made. In this case, we merely delegate the store initialization to the 
-   * {@link org.apache.gora.infinispan.store.InfinispanClient#initialize(Class<K> keyClass, Class<T> persistentClass)}. 
-   */
   public void initialize(Class<K> keyClass, Class<T> persistent, Properties properties) {
     try {
       super.initialize(keyClass, persistent, properties);
@@ -114,13 +103,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    */
   @Override
   public Result<K, T> execute(Query<K, T> query) {
-
-  
-    InfinispanQuery<K, T> infinispanQuery = new InfinispanQuery<K, T>();
-    infinispanQuery.setQuery(query);  
-    InfinispanResult<K, T> infinispanResult = new InfinispanResult<K, T>(this, query, infinispanQuery);   
-   
-    return infinispanResult;
+      return new InfinispanResult<K, T>(this,(InfinispanQuery)query);
   }
 
 
@@ -240,5 +223,9 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     LOG.info("schema exists");
     return infinispanClient.keyspaceExists();
   }
+
+   public InfinispanClient getClient() {
+       return infinispanClient;
+   }
 
 }

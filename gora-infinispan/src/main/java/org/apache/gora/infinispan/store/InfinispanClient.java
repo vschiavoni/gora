@@ -18,13 +18,13 @@
 
 package org.apache.gora.infinispan.store;
 
-import java.util.Properties;
-
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
 
 public class InfinispanClient<K, T extends PersistentBase> {
 	public static final Logger LOG = LoggerFactory
@@ -34,7 +34,7 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
 	
-	private RemoteCache<Object, Object> cache; //TODO use as types the keyClass clazz
+	private RemoteCache<K, T> cache; //TODO use as types the keyClass clazz
 	
 	public void initialize(Class<K> keyClass, Class<T> persistentClass, Properties properties)
 			throws Exception {
@@ -107,5 +107,9 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	public void setCacheManager(RemoteCacheManager cacheManager) {
 		this.cacheManager = cacheManager;
 	}
+
+    public RemoteCache<K,T> getCache(){
+        return this.cache;
+    }
 
 }
