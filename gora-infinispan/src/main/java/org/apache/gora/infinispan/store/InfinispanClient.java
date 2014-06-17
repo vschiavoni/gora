@@ -18,14 +18,27 @@
 
 package org.apache.gora.infinispan.store;
 
+import java.io.IOException;
+import java.util.Properties;
+
+import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.marshall.ApacheAvroMarshaller;
+import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
+import org.infinispan.protostream.ProtobufUtil;
+import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.impl.WrappedMessageMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Properties;
+import com.dyuproject.protostuff.LinkedBuffer;
+import com.dyuproject.protostuff.ProtostuffIOUtil;
+import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.runtime.RuntimeSchema;
+import com.google.protobuf.Descriptors.DescriptorValidationException;
 
 public class InfinispanClient<K, T extends PersistentBase> {
 	public static final Logger LOG = LoggerFactory
@@ -34,20 +47,28 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	private Class<K> keyClass;
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
+	private ProtobufMarshallerFactory<K> marshallerFactory;
 	
 	private RemoteCache<K, T> cache; //TODO use as types the keyClass clazz
 	
 	public void initialize(Class<K> keyClass, Class<T> persistentClass, Properties properties)
-			throws Exception {
+			throws Exception {		
+		LOG.info("Initializing InfinispanClient");
 		this.keyClass = keyClass;
-
-		this.persistentClass = persistentClass;
-		
+		this.persistentClass = persistentClass;		
 		/*
 		 * Search in the classpath a file hotrod-client.properties and used it to start the cache manager.
 		 * See here: http://docs.jboss.org/infinispan/7.0/apidocs/org/infinispan/client/hotrod/RemoteCacheManager.html#RemoteCacheManager(boolean)
 		 */
-		cacheManager = new RemoteCacheManager(true); // 
+		
+		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
+        clientBuilder.addServer().host("127.0.0.1").port(15233).marshaller(new ProtoStreamMarshaller());
+		
+		cacheManager = new RemoteCacheManager(clientBuilder.build(),true); // 
+		 
+		this.marshallerFactory = new ProtobufMarshallerFactory<K>();
+		
+		registerMarshaller(keyClass);
 		
 		cache = this.cacheManager.getCache(getKeyspaceName());
 		
@@ -56,6 +77,17 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		
 	}
 
+	private void registerMarshaller(Class<K> keyClass) {
+		SerializationContext srcCtx = ProtoStreamMarshaller.getSerializationContext(this.cacheManager);
+		try {
+			srcCtx.registerProtofile(this.marshallerFactory.newProtobuff(keyClass));
+		} catch (IOException | DescriptorValidationException e) {
+			e.printStackTrace();
+		}
+		srcCtx.registerMarshaller(this.marshallerFactory.newMarshaller(keyClass));
+	}
+
+	
 	/**
 	 * Check if keyspace already exists. In the case of Infinispan, check if a
 	 * cache with the same name already exists.
