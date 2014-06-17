@@ -241,9 +241,9 @@
   </mailingLists>
        
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/gora/trunk/</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/trunk/</developerConnection>
-    <url>http://svn.apache.org/viewvc/gora/trunk/</url>
+    <connection>scm:git:http://git-wip-us.apache.org/repos/asf/gora.git</connection>
+    <developerConnection>scm:git:http://git-wip-us.apache.org/repos/asf/gora.git</developerConnection>
+    <url>https://git-wip-us.apache.org/repos/asf/gora.git</url>
   </scm>
   <issueManagement>
     <system>JIRA</system>
@@ -584,12 +584,14 @@
         <module>gora-compiler</module>
         <module>gora-compiler-cli</module>
         <module>gora-core</module>
-        <module>gora-hbase</module>
         <module>gora-accumulo</module>
         <module>gora-cassandra</module>
-        <module>gora-solr</module>
+        <module>gora-hbase</module>
+        <!--module>gora-lucene</module-->
         <!--module>gora-dynamodb</module-->
         <!--module>gora-sql</module-->
+        <module>gora-mongodb</module>
+        <module>gora-solr</module>
         <module>gora-tutorial</module>
         <module>sources-dist</module>
         <module>gora-infinispan</module>

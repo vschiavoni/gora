@@ -15,6 +15,7 @@
 package org.apache.gora.solr.store;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,9 +42,13 @@ import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.impl.DataStoreBase;
 import org.apache.gora.util.AvroUtils;
 import org.apache.gora.util.IOUtils;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -62,31 +67,64 @@ public class SolrStore<K, T extends PersistentBase> extends DataStoreBase<K, T> 
 
   private static final Logger LOG = LoggerFactory.getLogger(SolrStore.class);
 
+  /** The default file name value to be used for obtaining the Solr object field mapping's */
   protected static final String DEFAULT_MAPPING_FILE = "gora-solr-mapping.xml";
 
+  /** The URL of the Solr server - defined in <code>gora.properties</code> */
   protected static final String SOLR_URL_PROPERTY = "solr.url";
 
+  /** The <code>solrconfig.xml</code> file to be used - defined in <code>gora.properties</code>*/
   protected static final String SOLR_CONFIG_PROPERTY = "solr.config";
 
+  /** The <code>schema.xml</code> file to be used - defined in <code>gora.properties</code>*/
   protected static final String SOLR_SCHEMA_PROPERTY = "solr.schema";
 
+  /** A batch size unit (ArrayList) of SolrDocument's to be used for writing to Solr.
+   * Should be defined in <code>gora.properties</code>. 
+   * A default value of 100 is used if this value is absent. This value must be of type <b>Integer</b>.
+   */
   protected static final String SOLR_BATCH_SIZE_PROPERTY = "solr.batchSize";
 
-  // protected static final String SOLR_SOLRJSERVER_IMPL = "solr.solrjserver";
+  /** The solrj implementation to use. This has a default value of <i>http</i> for HttpSolrServer.
+   * Available options include <b>http</b>, <b>cloud</b>, <b>concurrent</b> and <b>loadbalance</b>. 
+   * Defined in <code>gora.properties</code>
+   * This value must be of type <b>String</b>.
+   */
+  protected static final String SOLR_SOLRJSERVER_IMPL = "solr.solrjserver";
 
+  /** A batch commit unit for SolrDocument's used when making (commit) calls to Solr.
+   * Should be defined in <code>gora.properties</code>. 
+   * A default value of 1000 is used if this value is absent. This value must be of type <b>Integer</b>.
+   */
   protected static final String SOLR_COMMIT_WITHIN_PROPERTY = "solr.commitWithin";
 
+  /** The maximum number of result to return when we make a call to 
+   * {@link org.apache.gora.solr.store.SolrStore#execute(Query)}. This should be 
+   * defined in <code>gora.properties</code>. This value must be of type <b>Integer</b>.
+   */
   protected static final String SOLR_RESULTS_SIZE_PROPERTY = "solr.resultsSize";
 
+  /** The default batch size (ArrayList) of SolrDocuments to be used in the event of an absent 
+   * value for <code>solr.batchSize</code>. 
+   * Set to 100 by default.
+   */
   protected static final int DEFAULT_BATCH_SIZE = 100;
 
+  /** The default commit size of SolrDocuments to be used in the event of an absent 
+   * value for <code>solr.commitSize</code>. 
+   * Set to 1000 by default.
+   */
   protected static final int DEFAULT_COMMIT_WITHIN = 1000;
 
+  /** The default results size of SolrDocuments to be used in the event of an absent 
+   * value for <code>solr.resultsSize</code>. 
+   * Set to 100 by default.
+   */
   protected static final int DEFAULT_RESULTS_SIZE = 100;
 
   private SolrMapping mapping;
 
-  private String solrServerUrl, solrConfig, solrSchema;
+  private String solrServerUrl, solrConfig, solrSchema, solrJServerImpl;
 
   private SolrServer server, adminServer;
 
@@ -134,9 +172,48 @@ public class SolrStore<K, T extends PersistentBase> extends DataStoreBase<K, T> 
         SOLR_CONFIG_PROPERTY, null);
     solrSchema = DataStoreFactory.findProperty(properties, this,
         SOLR_SCHEMA_PROPERTY, null);
+    solrJServerImpl = DataStoreFactory.findProperty(properties, this, 
+        SOLR_SOLRJSERVER_IMPL, "http");
     LOG.info("Using Solr server at " + solrServerUrl);
-    adminServer = new HttpSolrServer(solrServerUrl);
-    server = new HttpSolrServer(solrServerUrl + "/" + mapping.getCoreName());
+    String solrJServerType = ((solrJServerImpl == null || solrJServerImpl.equals(""))?"http":solrJServerImpl);
+    // HttpSolrServer - denoted by "http" in properties
+    if (solrJServerType.toString().toLowerCase().equals("http")) {
+      LOG.info("Using HttpSolrServer Solrj implementation.");
+      this.adminServer = new HttpSolrServer(solrServerUrl);
+      this.server = new HttpSolrServer( solrServerUrl + "/" + mapping.getCoreName() );
+      // CloudSolrServer - denoted by "cloud" in properties
+    } else if (solrJServerType.toString().toLowerCase().equals("cloud")) {
+      LOG.info("Using CloudSolrServer Solrj implementation.");
+      try {
+        this.adminServer = new CloudSolrServer(solrServerUrl);
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+      try {
+        this.server = new CloudSolrServer( solrServerUrl + "/" + mapping.getCoreName() );
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+      // ConcurrentUpdateSolrServer - denoted by "concurrent" in properties
+    } else if (solrJServerType.toString().toLowerCase().equals("concurrent")) {
+      LOG.info("Using ConcurrentUpdateSolrServer Solrj implementation.");
+      this.adminServer = new ConcurrentUpdateSolrServer(solrServerUrl, 1000, 10);
+      this.server = new ConcurrentUpdateSolrServer( solrServerUrl + "/" + mapping.getCoreName(), 1000, 10);
+      // LBHttpSolrServer - denoted by "loadbalance" in properties
+    } else if (solrJServerType.toString().toLowerCase().equals("loadbalance")) {
+      LOG.info("Using LBHttpSolrServer Solrj implementation.");
+      String[] solrUrlElements = StringUtils.split(solrServerUrl);
+      try {
+        this.adminServer = new LBHttpSolrServer(solrUrlElements);
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+      try {
+        this.server = new LBHttpSolrServer( solrUrlElements + "/" + mapping.getCoreName() );
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+    }
     if (autoCreateSchema) {
       createSchema();
     }
@@ -473,7 +550,7 @@ public class SolrStore<K, T extends PersistentBase> extends DataStoreBase<K, T> 
       doc.addField(sf, v);
 
     }
-    LOG.info("DOCUMENT: " + doc);
+    LOG.info("Putting DOCUMENT: " + doc);
     batch.add(doc);
     if (batch.size() >= batchSize) {
       try {
