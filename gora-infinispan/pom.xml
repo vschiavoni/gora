@@ -108,6 +108,10 @@
 			<scope>test</scope>
 		</dependency>
 
+  		<dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
 
 
 		<!-- Infinispan Dependencies -->
@@ -205,8 +209,17 @@
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-remote-query-client</artifactId>
-			<version>7.0.0-SNAPSHOT</version>
-			<scope>test</scope>
+			<version>7.0.0-SNAPSHOT</version>		
+		</dependency>
+		<dependency>
+			<groupId>com.dyuproject.protostuff</groupId>
+			<artifactId>protostuff-runtime</artifactId>
+			<version>1.0.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.dyuproject.protostuff</groupId>
+			<artifactId>protostuff-core</artifactId>
+			<version>1.0.8</version>
 		</dependency>
 	</dependencies>
 
