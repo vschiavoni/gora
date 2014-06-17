@@ -215,7 +215,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
 
 
   /**
-   * Simple method to check if a Cassandra Keyspace exists.
+   * Simple method to check if a an Infinispan Keyspace exists.
    * @return true if a Keyspace exists.
    */
   @Override
