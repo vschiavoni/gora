@@ -91,17 +91,21 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 
 		@Override
 		protected void createCacheManagers() throws Throwable {
-			ConfigurationBuilder builder = hotRodCacheConfiguration(getDefaultClusteredCacheConfig(
-					CacheMode.REPL_SYNC, false));
+			ConfigurationBuilder defaultClusteredCacheConfig = getDefaultClusteredCacheConfig(
+					CacheMode.REPL_SYNC, false);
+	
+			ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
+			
 			createHotRodServers(NCACHES, builder);
-			for (EmbeddedCacheManager m : cacheManagers) {
+			for (EmbeddedCacheManager m : cacheManagers) {				
 				m.defineConfiguration(String.class.getCanonicalName(), builder.build());
 				m.defineConfiguration(Employee.class.getCanonicalName(), builder.build());
 				m.defineConfiguration(WebPage.class.getCanonicalName(), builder.build());
 			}
+			
+			
 
 		}
 
 	}
-
 }

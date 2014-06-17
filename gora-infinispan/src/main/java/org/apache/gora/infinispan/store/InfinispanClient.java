@@ -21,6 +21,7 @@ package org.apache.gora.infinispan.store;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
