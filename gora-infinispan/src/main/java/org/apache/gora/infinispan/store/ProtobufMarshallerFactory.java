@@ -36,18 +36,18 @@ public class ProtobufMarshallerFactory<K> {
 			@Override
 			public M readFrom(SerializationContext ctx, CodedInputStream in)
 					throws IOException {
-				
 				M theMessage = theSchema.newMessage();
 				
 				byte[] buffer = in.readRawBytes(LinkedBuffer.DEFAULT_BUFFER_SIZE);
 				
 				ProtobufIOUtil.mergeFrom(buffer, theMessage, theSchema);
-				return null;
+				return theMessage;
 			}
 
 			@Override
 			public void writeTo(SerializationContext ctx,
 					CodedOutputStream out, M t) throws IOException {
+							
 				LinkedBuffer buffer = LinkedBuffer
 						.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
 				try {
