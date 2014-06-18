@@ -29,6 +29,7 @@ import org.apache.gora.GoraTestDriver;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.store.InfinispanStore;
+import org.apache.hadoop.conf.Configuration;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -107,5 +108,10 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 
 		}
 
+	}
+
+	public Configuration getConf() {
+		Configuration c = new Configuration();
+		return c;
 	}
 }

@@ -62,7 +62,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     try {
       super.initialize(keyClass, persistent, properties);
       this.infinispanClient.initialize(keyClass, persistent, properties);
-      LOG.info("InfinispanStore initialized. keyClass:"+keyClass.getCanonicalName());
+      LOG.info("InfinispanStore initialized. keyClass: "+keyClass.getCanonicalName());
       initialized = true;
     } catch (Exception e) {
       LOG.error(e.getMessage());
@@ -151,7 +151,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
 
   @Override
   public T get(K key, String[] fields) {
-    InfinispanQuery<K,T> query = new InfinispanQuery<K,T>();
+    InfinispanQuery<K,T> query = new InfinispanQuery<K,T>(this);   
     query.setDataStore(this);
     query.setKeyRange(key, key);
     

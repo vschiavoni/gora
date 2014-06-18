@@ -20,19 +20,15 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
 	public InfinispanQuery(DataStore<K, T> dataStore) {		
 		super(dataStore);
 		if (dataStore==null){
-			throw new IllegalArgumentException("Illegal null datastore");
+			throw new IllegalArgumentException("Illegal datastore, value is null");
 		}
-		InfinispanStore infinispanStore = (InfinispanStore)dataStore;
+		InfinispanStore<K,T> infinispanStore = (InfinispanStore<K,T>)dataStore;
 		if (infinispanStore.isInitialized()!=true){
 			throw new IllegalStateException("Cannot execute query for not-initialized datastore");
 		}
-        InfinispanClient client = infinispanStore.getClient();       
-		RemoteCache remoteCache = client.getCache();
+        InfinispanClient<K,T> client = infinispanStore.getClient();       
+		RemoteCache<K,T> remoteCache = client.getCache();
 		qf = Search.getQueryFactory(remoteCache);
-	}
-
-	public InfinispanQuery() {
-		this(null);
 	}
 
     public void build(){

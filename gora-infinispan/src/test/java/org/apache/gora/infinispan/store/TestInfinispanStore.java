@@ -33,7 +33,9 @@ import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
+
 import static org.junit.Assert.*;
+
 /**
  * Test for {@link InfinispanStore}.
  */
@@ -48,15 +50,17 @@ public class TestInfinispanStore extends DataStoreTestBase {
 	@Before
 	public void setUp() throws Exception {
 		super.setUp();
+		conf = getTestDriver().getConf();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	protected DataStore<String, Employee> createEmployeeDataStore()
 			throws IOException {
-		InfinispanStore<String, Employee> employeeDataStore = DataStoreFactory.getDataStore(InfinispanStore.class,
-						Employee.class, Employee.class, conf);
+		InfinispanStore<String, Employee> employeeDataStore = 
+				DataStoreFactory.getDataStore(InfinispanStore.class, String.class,Employee.class, conf);
 		assertNotNull(employeeDataStore);
+		employeeDataStore.initialize(String.class, Employee.class, null);
 		return employeeDataStore;
 	}
 
@@ -64,12 +68,19 @@ public class TestInfinispanStore extends DataStoreTestBase {
 	@Override
 	protected DataStore<String, WebPage> createWebPageDataStore()
 			throws IOException {
-		return DataStoreFactory.getDataStore(InfinispanStore.class,
-				String.class, WebPage.class, conf);
+		InfinispanStore<String, WebPage> webPageDataStore = 
+				DataStoreFactory.getDataStore(InfinispanStore.class, String.class,WebPage.class, conf);
+		webPageDataStore.initialize(String.class, WebPage.class, null);
+		return webPageDataStore;
 	}
 
 	public GoraInfinispanTestDriver getTestDriver() {
 		return (GoraInfinispanTestDriver) testDriver;
 	}
+
+	// @Override
+	// public void testGet() throws IOException, Exception {
+	// super.testGet();
+	// }
 
 }
