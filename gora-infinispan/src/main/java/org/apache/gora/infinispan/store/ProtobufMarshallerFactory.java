@@ -36,6 +36,7 @@ public class ProtobufMarshallerFactory<K> {
 			@Override
 			public M readFrom(SerializationContext ctx, CodedInputStream in)
 					throws IOException {
+				
 				M theMessage = theSchema.newMessage();
 				
 				byte[] buffer = in.readRawBytes(LinkedBuffer.DEFAULT_BUFFER_SIZE);
@@ -48,11 +49,9 @@ public class ProtobufMarshallerFactory<K> {
 			public void writeTo(SerializationContext ctx,
 					CodedOutputStream out, M t) throws IOException {
 							
-				LinkedBuffer buffer = LinkedBuffer
-						.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+				LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
 				try {
-					byte[] protostuff = ProtobufIOUtil.toByteArray(t,
-							this.theSchema, buffer);
+					byte[] protostuff = ProtobufIOUtil.toByteArray(t,this.theSchema, buffer);
 					out.writeRawBytes(protostuff);
 				} finally {
 					buffer.clear();
