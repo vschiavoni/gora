@@ -116,7 +116,7 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
 	public void deleteByKey(K key) {
 		throw new UnsupportedOperationException(
-				"ask the cachemanager to delete the cache with the given name/key?");
+				"To be implemented yet");
 	}
 
 	public void putInCache(K key, T val) {
