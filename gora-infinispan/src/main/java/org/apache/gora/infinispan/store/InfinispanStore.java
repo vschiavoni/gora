@@ -62,7 +62,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     try {
       super.initialize(keyClass, persistent, properties);
       this.infinispanClient.initialize(keyClass, persistent, properties);
-      LOG.info("InfinispanStore initialized.");
+      LOG.info("InfinispanStore initialized. keyClass:"+keyClass.getCanonicalName());
     } catch (Exception e) {
       LOG.error(e.getMessage());
       LOG.error(e.getStackTrace().toString());
@@ -105,7 +105,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    */
   @Override
   public Result<K, T> execute(Query<K, T> query) {
-      return new InfinispanResult<K, T>(this,(InfinispanQuery)query);
+      return new InfinispanResult<K, T>(this,(InfinispanQuery<K, T>)query);
   }
 
 
@@ -226,7 +226,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     return infinispanClient.keyspaceExists();
   }
 
-   public InfinispanClient getClient() {
+   public InfinispanClient<K, T> getClient() {
        return infinispanClient;
    }
 
