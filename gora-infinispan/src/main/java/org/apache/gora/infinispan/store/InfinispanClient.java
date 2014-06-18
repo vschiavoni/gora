@@ -21,24 +21,15 @@ package org.apache.gora.infinispan.store;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ApacheAvroMarshaller;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.BaseMarshaller;
-import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.impl.WrappedMessageMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dyuproject.protostuff.LinkedBuffer;
-import com.dyuproject.protostuff.ProtostuffIOUtil;
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 
 public class InfinispanClient<K, T extends PersistentBase> {
@@ -82,8 +73,11 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		SerializationContext srcCtx = ProtoStreamMarshaller.getSerializationContext(this.cacheManager);
 		try {
 			srcCtx.registerProtofile(this.marshallerFactory.newProtobuf(keyClass));
-		} catch (IOException | DescriptorValidationException e) {
+		} catch (IOException e) {
 			LOG.error(e.getMessage());
+			e.printStackTrace();
+		} catch (DescriptorValidationException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		srcCtx.registerMarshaller(this.marshallerFactory.newMarshaller(keyClass));

@@ -20,7 +20,6 @@ public  class ProtobufMarshallerFactory<K>{
 
 			@Override
 			public String getTypeName() {
-				//System.out.println("typename for marshaller:" + clazz.getCanonicalName());
 				return clazz.getCanonicalName();
 			}
 		};
