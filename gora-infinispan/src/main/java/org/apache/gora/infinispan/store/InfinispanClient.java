@@ -28,6 +28,7 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ApacheAvroMarshaller;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
+import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.impl.WrappedMessageMarshaller;
@@ -80,11 +81,13 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	private void registerMarshaller(Class<K> keyClass) {
 		SerializationContext srcCtx = ProtoStreamMarshaller.getSerializationContext(this.cacheManager);
 		try {
-			srcCtx.registerProtofile(this.marshallerFactory.newProtobuff(keyClass));
+			srcCtx.registerProtofile(this.marshallerFactory.newProtobuf(keyClass));
 		} catch (IOException | DescriptorValidationException e) {
+			LOG.error(e.getMessage());
 			e.printStackTrace();
 		}
 		srcCtx.registerMarshaller(this.marshallerFactory.newMarshaller(keyClass));
+		LOG.info("Registered marshaller:"+srcCtx.getConfiguration().toString());
 	}
 
 	

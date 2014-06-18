@@ -9,12 +9,26 @@ import com.dyuproject.protostuff.runtime.RuntimeSchema;
 
 public  class ProtobufMarshallerFactory<K>{
 	
-	public  BaseMarshaller<K> newMarshaller(Class<K> schemaClass) {
-		Schema<K> schema = RuntimeSchema.getSchema(schemaClass);	
-		return null;		
+	public  BaseMarshaller<K> newMarshaller(final Class<K> clazz) {
+		
+		BaseMarshaller<K> marshaller = new BaseMarshaller<K>() {
+			
+			@Override
+			public Class<? extends K> getJavaClass() {
+				return clazz;
+			}
+
+			@Override
+			public String getTypeName() {
+				//System.out.println("typename for marshaller:" + clazz.getCanonicalName());
+				return clazz.getCanonicalName();
+			}
+		};
+		
+		return marshaller;		
 	}
 	
-	public InputStream newProtobuff(Class<K> schemaClass) {	
+	public InputStream newProtobuf(Class<K> schemaClass) {	
 		Schema<K> schema = RuntimeSchema.getSchema(schemaClass);			
 		return null;		
 	}

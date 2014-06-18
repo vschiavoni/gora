@@ -93,7 +93,7 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 		protected void createCacheManagers() throws Throwable {
 			ConfigurationBuilder defaultClusteredCacheConfig = getDefaultClusteredCacheConfig(
 					CacheMode.REPL_SYNC, false);
-	
+			
 			ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
 			
 			createHotRodServers(NCACHES, builder);

@@ -62,9 +62,11 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     try {
       super.initialize(keyClass, persistent, properties);
       this.infinispanClient.initialize(keyClass, persistent, properties);
+      LOG.info("InfinispanStore initialized.");
     } catch (Exception e) {
       LOG.error(e.getMessage());
       LOG.error(e.getStackTrace().toString());
+      e.printStackTrace();
     }
   }
 

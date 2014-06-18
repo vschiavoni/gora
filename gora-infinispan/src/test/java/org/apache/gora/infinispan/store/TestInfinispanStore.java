@@ -33,7 +33,6 @@ import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
-import static org.junit.Assert.fail;
 
 /**
  * Test for {@link InfinispanStore}.
@@ -56,7 +55,7 @@ public class TestInfinispanStore extends DataStoreTestBase {
 	protected DataStore<String, Employee> createEmployeeDataStore()
 			throws IOException {
 		return DataStoreFactory.getDataStore(InfinispanStore.class,
-				String.class, Employee.class, conf);
+				Employee.class, Employee.class, conf);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -69,12 +68,6 @@ public class TestInfinispanStore extends DataStoreTestBase {
 
 	public GoraInfinispanTestDriver getTestDriver() {
 		return (GoraInfinispanTestDriver) testDriver;
-	}
-
-	@Override
-	public void assertPut(Employee employee) throws IOException {
-		super.assertPut(employee);
-		fail("to complete");
 	}
 
 }
