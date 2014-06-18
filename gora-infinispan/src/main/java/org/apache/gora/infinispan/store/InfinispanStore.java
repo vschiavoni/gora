@@ -44,7 +44,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
 
   private InfinispanClient<K, T>  infinispanClient = new InfinispanClient<K, T>();
 
-
+  private boolean initialized =false;
   /**
    * The values are cache entries pending to be stored.
    *
@@ -63,6 +63,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
       super.initialize(keyClass, persistent, properties);
       this.infinispanClient.initialize(keyClass, persistent, properties);
       LOG.info("InfinispanStore initialized. keyClass:"+keyClass.getCanonicalName());
+      initialized = true;
     } catch (Exception e) {
       LOG.error(e.getMessage());
       LOG.error(e.getStackTrace().toString());
@@ -229,5 +230,9 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
    public InfinispanClient<K, T> getClient() {
        return infinispanClient;
    }
+
+public boolean isInitialized() {
+	return initialized;
+}
 
 }
