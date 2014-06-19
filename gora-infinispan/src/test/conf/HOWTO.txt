@@ -1,3 +1,4 @@
 To generate .protobin files from .proto descriptors:
 
-protoc --descriptor_set_out=webpage.protobin webpage.prot
+protoc --descriptor_set_out=webpage.protobin webpage.proto
+
