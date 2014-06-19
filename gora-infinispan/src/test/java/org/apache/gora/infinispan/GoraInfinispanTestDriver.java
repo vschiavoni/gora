@@ -33,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.IndexingConfiguration;
 import org.infinispan.manager.EmbeddedCacheManager;
 // Logging imports
 import org.slf4j.Logger;
@@ -94,17 +95,16 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 		protected void createCacheManagers() throws Throwable {
 			ConfigurationBuilder defaultClusteredCacheConfig = getDefaultClusteredCacheConfig(
 					CacheMode.REPL_SYNC, false);
-			
-			ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
-			
+            defaultClusteredCacheConfig.indexing().enable();
+            defaultClusteredCacheConfig.jmxStatistics().disable();
+            ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
+
 			createHotRodServers(NCACHES, builder);
 			for (EmbeddedCacheManager m : cacheManagers) {				
 				m.defineConfiguration(String.class.getCanonicalName(), builder.build());
 				m.defineConfiguration(Employee.class.getCanonicalName(), builder.build());
 				m.defineConfiguration(WebPage.class.getCanonicalName(), builder.build());
 			}
-			
-			
 
 		}
 
