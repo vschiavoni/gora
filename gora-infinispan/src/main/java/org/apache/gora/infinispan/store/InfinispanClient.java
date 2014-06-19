@@ -25,19 +25,32 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.commons.util.Util;
+import org.infinispan.jmx.PerThreadMBeanServerLookup;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.query.remote.ProtobufMetadataManager;
+import org.infinispan.query.remote.client.MarshallerRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
+import java.util.Set;
 
 public class InfinispanClient<K, T extends PersistentBase> {
 	public static final Logger LOG = LoggerFactory
 			.getLogger(InfinispanClient.class);
 
+	
+	public static String JMX_DOMAIN = "infinispan*";
+	
 	private Class<K> keyClass;
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
@@ -68,37 +81,60 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
         // FIXME to be run wtih -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.authenticate=false
         //initialize server-side serialization context via JMX
-        MBeanServerConnectionProvider jmxConnectionProvider
-                = new MBeanServerConnectionProvider("127.0.0.1",10000);
-
-        String mbean = "jboss.infinispan:type=RemoteQuery,name="
-            + ObjectName.quote(cache.getName())
-            + ",component=ProtobufMetadataManager";
-
-        System.out.println(mbean);
-
+        //MBeanServerConnectionProvider jmxConnectionProvider
+          //      = new MBeanServerConnectionProvider("127.0.0.1",10000);
+        
+        
+        MBeanServer mBeanServer =ManagementFactory.getPlatformMBeanServer();
+        LOG.info("MBeans managed by mBeanServer: "+ mBeanServer.getMBeanCount());
+        
+        for (String s: mBeanServer.getDomains()){
+        	if (s.contains("infinispan-")) { //ugly hack, but it works
+        		JMX_DOMAIN=s;
+        		break;
+        	}
+        }
+        QueryExp queryExpRemoteQueryMBean = new ObjectName(JMX_DOMAIN + ":type=RemoteQuery,name="
+                + ObjectName.quote("DefaultCacheManager")
+                + ",component=" + ProtobufMetadataManager.OBJECT_NAME);  
+        LOG.info("Recovering Mbean with name: "+queryExpRemoteQueryMBean.toString());
+        
+        ObjectInstance targetBean = null;
+        
+        for (ObjectInstance mbean : mBeanServer.queryMBeans(null, queryExpRemoteQueryMBean)) {
+        	LOG.info("MBean matching query:"+mbean.getClassName());    
+        	targetBean = mbean;
+         }
+        
         //initialize server-side serialization context via JMX
         byte[] descriptor = readClasspathResource("/bank.protobin");
-        invokeOperation(jmxConnectionProvider, mbean, "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
-
+        
         // FIXME fails with a status WAITING (name of the mbean is not appropriate ?)
+		mBeanServer.invoke( targetBean.getObjectName(), "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
+   
+//
+        //initialize client-side serialization context
+        MarshallerRegistration.registerMarshallers(
+                ProtoStreamMarshaller.getSerializationContext(cacheManager));
 
-        while(true);
+        registerMarshaller(persistentClass);
+		registerMarshaller(keyClass);
 
-//
-//        //initialize client-side serialization context
-//        MarshallerRegistration.registerMarshallers(
-//                ProtoStreamMarshaller.getSerializationContext(cacheManager));
-//
-//        registerMarshaller(persistentClass);
-//		registerMarshaller(keyClass);
-//
-//		cache = this.cacheManager.getCache(getKeyspaceName());
-//
-//		// add keyspace to cluster
-//		checkKeyspace();
+		cache = this.cacheManager.getCache(getKeyspaceName());
+
+		// add keyspace to cluster
+		checkKeyspace();
 
 	}
+	
+	 private static ObjectName createObjectName(String name) {
+	      try {
+	         return new ObjectName(name);
+		} catch (MalformedObjectNameException e) {
+	         throw new RuntimeException(e);
+	      }
+	   }
+
 
 	/**
 	 * Check if keyspace already exists. In the case of Infinispan, check if a
