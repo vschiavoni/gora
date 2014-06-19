@@ -1,0 +1,30 @@
+message WebPage{
+	repeated string url = 4;
+	repeated string content = 5;
+	repeated string parsedContent = 6;
+	message Entry_outlinks{
+		required string key = 1;
+		required string value = 2;
+	}
+	repeated Entry_outlinks outlinks = 7;
+	message Entry_headers{
+		required string key = 1;
+		required string value = 2;
+	}
+	repeated Entry_headers headers = 8;
+	message Metadata{
+		optional sint32 version = 4;
+		message Entry_data{
+			required string key = 1;
+			required string value = 2;
+		}
+		repeated Entry_data data = 5;
+		message Tombstone{
+		}
+		repeated WebPage.Metadata.Tombstone TOMBSTONE = 6;
+	}
+	repeated WebPage.Metadata metadata = 9;
+	message Tombstone{
+	}
+	repeated WebPage.Tombstone TOMBSTONE = 10;
+}

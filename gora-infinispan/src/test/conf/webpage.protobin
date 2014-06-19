@@ -1,0 +1,28 @@
+
+‰
+webpage.proto"÷
+WebPage
+url (	
+content (	
+parsedContent (	)
+outlinks (2.WebPage.Entry_outlinks'
+headers (2.WebPage.Entry_headers#
+metadata	 (2.WebPage.Metadata%
+	TOMBSTONE
+ (2.WebPage.Tombstone,
+Entry_outlinks
+key (	
+value (	+
+Entry_headers
+key (	
+value (	®
+Metadata
+version (*
+data (2.WebPage.Metadata.Entry_data.
+	TOMBSTONE (2.WebPage.Metadata.Tombstone(
+
+Entry_data
+key (	
+value (	
+	Tombstone
+	Tombstone
