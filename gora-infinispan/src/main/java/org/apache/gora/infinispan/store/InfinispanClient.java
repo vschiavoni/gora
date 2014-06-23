@@ -18,6 +18,7 @@
 
 package org.apache.gora.infinispan.store;
 
+import com.google.protobuf.Descriptors;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.arquillian.utils.MBeanServerConnectionProvider;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -25,31 +26,33 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.commons.util.Util;
-import org.infinispan.jmx.PerThreadMBeanServerLookup;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.ProtobufMetadataManager;
 import org.infinispan.query.remote.client.MarshallerRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.QueryExp;
-
+import javax.management.*;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.util.Properties;
-import java.util.Set;
+
+// FIXME to be run wtih -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.authenticate=false
 
 public class InfinispanClient<K, T extends PersistentBase> {
 	public static final Logger LOG = LoggerFactory
 			.getLogger(InfinispanClient.class);
 
-	
-	public static String JMX_DOMAIN = "infinispan*";
+    private static final String PROTOBUF_DESCRIPTOR_RESOURCE =  "/bank.protobin";
+    private static String host = "127.0.0.1";
+    private static int jmxPort = 9999;
+    private  static int hotRodPort = 15233;
+
+    public static String JMX_DOMAIN = "infinispan*";
 	
 	private Class<K> keyClass;
 	private Class<T> persistentClass;
@@ -62,57 +65,18 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
 		LOG.info("Initializing InfinispanClient");
 
+        // initialize cache maanager and cache
         this.keyClass = keyClass;
-		this.persistentClass = persistentClass;
-		/*
-		 * Search in the classpath a file hotrod-client.properties and used it
-		 * to start the cache manager. See here:
-		 * http://docs.jboss.org/infinispan
-		 * /7.0/apidocs/org/infinispan/client/hotrod
-		 * /RemoteCacheManager.html#RemoteCacheManager(boolean)
-		 */
-
-		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
-		clientBuilder.addServer().host("127.0.0.1").port(15233)
-				.marshaller(new ProtoStreamMarshaller());
-		cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
-        cacheManager.start();
+        this.persistentClass = persistentClass;
+        ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
+        clientBuilder.addServer().host(host).port(hotRodPort).marshaller(new ProtoStreamMarshaller());
+        cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
         cache = cacheManager.getCache();
 
-        // FIXME to be run wtih -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.authenticate=false
-        //initialize server-side serialization context via JMX
-        //MBeanServerConnectionProvider jmxConnectionProvider
-          //      = new MBeanServerConnectionProvider("127.0.0.1",10000);
-        
-        
-        MBeanServer mBeanServer =ManagementFactory.getPlatformMBeanServer();
-        LOG.info("MBeans managed by mBeanServer: "+ mBeanServer.getMBeanCount());
-        
-        for (String s: mBeanServer.getDomains()){
-        	if (s.contains("infinispan-")) { //ugly hack, but it works
-        		JMX_DOMAIN=s;
-        		break;
-        	}
-        }
-        QueryExp queryExpRemoteQueryMBean = new ObjectName(JMX_DOMAIN + ":type=RemoteQuery,name="
-                + ObjectName.quote("DefaultCacheManager")
-                + ",component=" + ProtobufMetadataManager.OBJECT_NAME);  
-        LOG.info("Recovering Mbean with name: "+queryExpRemoteQueryMBean.toString());
-        
-        ObjectInstance targetBean = null;
-        
-        for (ObjectInstance mbean : mBeanServer.queryMBeans(null, queryExpRemoteQueryMBean)) {
-        	LOG.info("MBean matching query:"+mbean.getClassName());    
-        	targetBean = mbean;
-         }
-        
-        //initialize server-side serialization context via JMX
-        byte[] descriptor = readClasspathResource("/bank.protobin");
-        
-        // FIXME fails with a status WAITING (name of the mbean is not appropriate ?)
-		mBeanServer.invoke( targetBean.getObjectName(), "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
-   
-//
+        // register proto file
+        // this.registerRemoteProtofile(host,jmxPort);
+        this.registerLocalProtofile();
+
         //initialize client-side serialization context
         MarshallerRegistration.registerMarshallers(
                 ProtoStreamMarshaller.getSerializationContext(cacheManager));
@@ -208,6 +172,14 @@ public class InfinispanClient<K, T extends PersistentBase> {
         SerializationContext srcCtx = ProtoStreamMarshaller
                 .getSerializationContext(this.cacheManager);
 
+        try {
+            srcCtx.registerProtofile(PROTOBUF_DESCRIPTOR_RESOURCE);
+        } catch (IOException e) {
+            e.printStackTrace();  // TODO: Customise this generated block
+        } catch (Descriptors.DescriptorValidationException e) {
+            e.printStackTrace();  // TODO: Customise this generated block
+        }
+
         srcCtx.registerMarshaller(
                 ProtobufMarshallerFactory.newMarshaller(marshalee));
 
@@ -229,6 +201,50 @@ public class InfinispanClient<K, T extends PersistentBase> {
                 is.close();
             }
         }
+    }
+
+    private void registerRemoteProtofile(String jmxHost, int jmxPort) throws Exception {
+        JMXConnector jmxConnector = JMXConnectorFactory.connect(new JMXServiceURL("service:jmx:remoting-jmx://" + jmxHost + ":" + jmxPort));
+        MBeanServerConnection jmxConnection = jmxConnector.getMBeanServerConnection();
+
+        ObjectName protobufMetadataManagerObjName = new ObjectName("jboss.infinispan:type=RemoteQuery,name="
+                + ObjectName.quote("DefaultCacheManager") + ",component=ProtobufMetadataManager");
+
+        //initialize client-side serialization context via JMX
+        byte[] descriptor = readClasspathResource(PROTOBUF_DESCRIPTOR_RESOURCE);
+        jmxConnection.invoke(protobufMetadataManagerObjName, "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
+        jmxConnector.close();
+    }
+
+    private void registerLocalProtofile() throws Exception {
+        MBeanServer mBeanServer =ManagementFactory.getPlatformMBeanServer();
+        LOG.info("MBeans managed by mBeanServer: "+ mBeanServer.getMBeanCount());
+
+        for (String s: mBeanServer.getDomains()){
+            if (s.contains("infinispan-")) { //ugly hack, but it works
+                JMX_DOMAIN=s;
+                break;
+            }
+        }
+        QueryExp queryExpRemoteQueryMBean = new ObjectName(JMX_DOMAIN + ":type=RemoteQuery,name="
+                + ObjectName.quote("DefaultCacheManager")
+                + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
+
+        LOG.info("Recovering Mbean with name: "+queryExpRemoteQueryMBean.toString());
+
+        ObjectInstance targetBean = null;
+
+        for (ObjectInstance mbean : mBeanServer.queryMBeans(null, queryExpRemoteQueryMBean)) {
+            LOG.info("MBean matching query:"+mbean.getClassName());
+            targetBean = mbean;
+        }
+
+        //initialize server-side serialization context via JMX
+        byte[] descriptor = readClasspathResource(PROTOBUF_DESCRIPTOR_RESOURCE);
+
+        // FIXME fails with a status WAITING (name of the mbean is not appropriate ?)
+        mBeanServer.invoke( targetBean.getObjectName(), "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
+
     }
 
 }

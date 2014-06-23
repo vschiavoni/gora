@@ -229,7 +229,7 @@
             <groupId>org.infinispan.arquillian.container</groupId>
             <artifactId>infinispan-arquillian-impl</artifactId>
             <version>1.0.0.Final</version>
-        </dependency>        
-	</dependencies>
+        </dependency>
+    </dependencies>
 
 </project>

@@ -23,8 +23,6 @@
 
 package org.apache.gora.infinispan;
 
-import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
@@ -33,11 +31,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.cache.IndexingConfiguration;
+import org.infinispan.jmx.PerThreadMBeanServerLookup;
 import org.infinispan.manager.EmbeddedCacheManager;
-// Logging imports
+import org.infinispan.query.remote.ProtobufMetadataManagerMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.JMX;
+import javax.management.MBeanServer;
+
+import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
+
+// Logging imports
 
 /**
  * Helper class for third party tests using gora-infinispan backend.
@@ -98,7 +103,6 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
             defaultClusteredCacheConfig.indexing().enable();
             defaultClusteredCacheConfig.jmxStatistics().disable();
             ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
-
 			createHotRodServers(NCACHES, builder);
 			for (EmbeddedCacheManager m : cacheManagers) {				
 				m.defineConfiguration(String.class.getCanonicalName(), builder.build());

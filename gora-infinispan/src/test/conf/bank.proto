@@ -14,6 +14,10 @@ message WebPage  {
    required int32 id = 1;
 }
 
+message Employee  {
+   required int32 id = 1;
+}
+
 message User {
    required int32 id = 1;
 

@@ -39,9 +39,9 @@ public class ProtobufMarshallerFactory<K> {
 				
 				M theMessage = theSchema.newMessage();
 				
-				byte[] buffer = in.readRawBytes(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-				
-				ProtobufIOUtil.mergeFrom(buffer, theMessage, theSchema);
+//				byte[] buffer = in.readRawBytes(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+//
+//				ProtobufIOUtil.mergeFrom(buffer, theMessage, theSchema);
 				return theMessage;
 			}
 
@@ -49,22 +49,33 @@ public class ProtobufMarshallerFactory<K> {
 			public void writeTo(SerializationContext ctx,
 					CodedOutputStream out, M t) throws IOException {
 							
-				LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-				try {
-					byte[] protostuff = ProtobufIOUtil.toByteArray(t,this.theSchema, buffer);
-					out.writeRawBytes(protostuff);
-				} finally {
-					buffer.clear();
-				}
+//				LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+//				try {
+//					byte[] protostuff = ProtobufIOUtil.toByteArray(t,this.theSchema, buffer);
+//					out.writeRawBytes(protostuff);
+//				} finally {
+//					buffer.clear();
+//				}
 			}
 		};
 
 		return marshaller;
 	}
 
-	public InputStream newProtobuf(Class<K> schemaClass) {
-		Schema<K> schema = RuntimeSchema.getSchema(schemaClass);
-		return null;
-	}
+//    private static <M> byte[] newProtobinDecriptor(final Class<M> clazz) {
+//
+//        Schema<M> theSchema = RuntimeSchema.getSchema(clazz);
+//
+//        for(int i=0;;i++){
+//            String fieldName = theSchema.getFieldName(i);
+//            if(fieldName!=null)
+//
+//
+//        }
+//
+//
+//
+//    }
+
 
 }
