@@ -151,39 +151,8 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
 
   @Override
   public T get(K key, String[] fields) {
-    InfinispanQuery<K,T> query = new InfinispanQuery<K,T>(this);   
-    query.setDataStore(this);
-    query.setKeyRange(key, key);
-    
-    if (fields == null){
-      fields = this.getFields();
-    }
-    //TODO how to translate this for Infinispan ? 
-    
-    // Generating UnionFields
-//    ArrayList<String> unionFields = new ArrayList<String>();
-//    for (String field: fields){
-//      Field schemaField =this.fieldMap.get(field);
-//      Type type = schemaField.schema().getType();
-//      if (type.getName().equals("UNION".toLowerCase())){
-//        unionFields.add(field+UNION_COL_SUFIX);
-//      }
-//    }
-//    
-//    String[] arr = unionFields.toArray(new String[unionFields.size()]);
-//    String[] both = (String[]) ArrayUtils.addAll(fields, arr);
-//    
-//    query.setFields(both);
+      return this.infinispanClient.getInCache(key, fields);
 
-    query.setLimit(1);
-    Result<K,T> result = execute(query);
-    boolean hasResult = false;
-    try {
-      hasResult = result.next();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return hasResult ? result.get() : null;
   }
 
   @Override

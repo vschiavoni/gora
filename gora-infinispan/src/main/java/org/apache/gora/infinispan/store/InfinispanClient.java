@@ -19,39 +19,23 @@
 package org.apache.gora.infinispan.store;
 
 import org.apache.gora.persistency.impl.PersistentBase;
-import org.infinispan.arquillian.utils.MBeanServerConnectionProvider;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.commons.util.Util;
-import org.infinispan.jmx.PerThreadMBeanServerLookup;
-import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.remote.ProtobufMetadataManager;
-import org.infinispan.query.remote.client.MarshallerRegistration;
+import org.infinispan.query.remote.client.avro.AvroMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.QueryExp;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.management.ManagementFactory;
 import java.util.Properties;
-import java.util.Set;
 
 public class InfinispanClient<K, T extends PersistentBase> {
-	public static final Logger LOG = LoggerFactory
-			.getLogger(InfinispanClient.class);
 
-	
-	public static String JMX_DOMAIN = "infinispan*";
-	
-	private Class<K> keyClass;
+    public static final Logger LOG = LoggerFactory.getLogger(InfinispanClient.class);
+
+    private Class<K> keyClass;
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
 
@@ -64,67 +48,20 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
         this.keyClass = keyClass;
 		this.persistentClass = persistentClass;
-		/*
-		 * Search in the classpath a file hotrod-client.properties and used it
-		 * to start the cache manager. See here:
-		 * http://docs.jboss.org/infinispan
-		 * /7.0/apidocs/org/infinispan/client/hotrod
-		 * /RemoteCacheManager.html#RemoteCacheManager(boolean)
-		 */
 
 		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
-		clientBuilder.addServer().host("127.0.0.1").port(15233)
-				.marshaller(new ProtoStreamMarshaller());
+        AvroMarshaller<T> marshaller = new AvroMarshaller<T>(persistentClass);
+		clientBuilder
+                .addServer()
+                .host("127.0.0.1")
+                .port(15233)
+                .marshaller(marshaller);
 		cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
         cacheManager.start();
         cache = cacheManager.getCache();
-
-        // FIXME to be run wtih -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.authenticate=false
-        //initialize server-side serialization context via JMX
-        //MBeanServerConnectionProvider jmxConnectionProvider
-          //      = new MBeanServerConnectionProvider("127.0.0.1",10000);
-        
-        
-        MBeanServer mBeanServer =ManagementFactory.getPlatformMBeanServer();
-        LOG.info("MBeans managed by mBeanServer: "+ mBeanServer.getMBeanCount());
-        
-        for (String s: mBeanServer.getDomains()){
-        	if (s.contains("infinispan-")) { //ugly hack, but it works
-        		JMX_DOMAIN=s;
-        		break;
-        	}
-        }
-        QueryExp queryExpRemoteQueryMBean = new ObjectName(JMX_DOMAIN + ":type=RemoteQuery,name="
-                + ObjectName.quote("DefaultCacheManager")
-                + ",component=" + ProtobufMetadataManager.OBJECT_NAME);  
-        LOG.info("Recovering Mbean with name: "+queryExpRemoteQueryMBean.toString());
-        
-        ObjectInstance targetBean = null;
-        
-        for (ObjectInstance mbean : mBeanServer.queryMBeans(null, queryExpRemoteQueryMBean)) {
-        	LOG.info("MBean matching query:"+mbean.getClassName());    
-        	targetBean = mbean;
-         }
-        
-        //initialize server-side serialization context via JMX
-        byte[] descriptor = readClasspathResource("/bank.protobin");
-        
-        // FIXME fails with a status WAITING (name of the mbean is not appropriate ?)
-		mBeanServer.invoke( targetBean.getObjectName(), "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
-   
-//
-        //initialize client-side serialization context
-        MarshallerRegistration.registerMarshallers(
-                ProtoStreamMarshaller.getSerializationContext(cacheManager));
-
-        registerMarshaller(persistentClass);
-		registerMarshaller(keyClass);
-
-		cache = this.cacheManager.getCache(getKeyspaceName());
-
-		// add keyspace to cluster
-		checkKeyspace();
-
+        System.out.println("HERE => "+persistentClass.getCanonicalName());
+        ProtoStreamMarshaller.getSerializationContext(cacheManager)
+                .registerMarshaller(persistentClass, marshaller);
 	}
 	
 	 private static ObjectName createObjectName(String name) {
@@ -199,36 +136,14 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		return this.cache;
 	}
 
+    public T  getInCache(K key, String[] fields) {
+        // FIXME can one implement the projection at the server side ?
+        return cache.get(key);
+    }
+
     //
     // HELPERS
     //
 
-    private  <M> void registerMarshaller(Class<M> marshalee) {
-
-        SerializationContext srcCtx = ProtoStreamMarshaller
-                .getSerializationContext(this.cacheManager);
-
-        srcCtx.registerMarshaller(
-                ProtobufMarshallerFactory.newMarshaller(marshalee));
-
-        LOG.info("Registered Marshaller for class " + marshalee.getName());
-
-    }
-    private Object invokeOperation(MBeanServerConnectionProvider provider, String mbean, String operationName, Object[] params,
-                                   String[] signature) throws Exception {
-        return provider.getConnection().invoke(new ObjectName(mbean), operationName, params, signature);
-    }
-
-
-    private byte[] readClasspathResource(String resourcePath) throws IOException {
-        InputStream is = getClass().getResourceAsStream(resourcePath);
-        try {
-            return Util.readStream(is);
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-    }
 
 }
