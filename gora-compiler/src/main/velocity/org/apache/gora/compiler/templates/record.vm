@@ -29,7 +29,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static enum Field {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
++#if (!$field.name().equals("__g__dirty"))
     ${this.toUpperCase($field.name())}($i, "${this.mangle($field.name(), $schema.isError())}"),
++#end
 #set ($i = $i + 1)
 #end
     ;
@@ -71,7 +73,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
   public static final String[] _ALL_FIELDS = {
 #foreach ($field in $schema.getFields())
+#if (!$field.name().equals("__g__dirty"))
   "${this.mangle($field.name(), $schema.isError())}",
+#end
 #end
   };
 
