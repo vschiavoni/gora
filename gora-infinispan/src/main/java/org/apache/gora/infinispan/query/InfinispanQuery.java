@@ -6,9 +6,10 @@ import org.apache.gora.infinispan.store.InfinispanClient;
 import org.apache.gora.infinispan.store.InfinispanStore;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.impl.QueryBase;
-import org.apache.gora.store.DataStore;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.FilterConditionContext;
+import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,10 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
 
     private QueryFactory qf;
     private org.infinispan.query.dsl.Query q;
+    private QueryBuilder qb;
+    private String primaryFieldName;
 
-	public InfinispanQuery(DataStore<K, T> dataStore) {		
+	public InfinispanQuery(InfinispanStore<K, T> dataStore) {
 		super(dataStore);
 		if (dataStore==null){
 			throw new IllegalArgumentException("Illegal datastore, value is null");
@@ -35,10 +38,14 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
         InfinispanClient<K,T> client = infinispanStore.getClient();       
 		RemoteCache<K,T> remoteCache = client.getCache();
 		qf = Search.getQueryFactory(remoteCache);
+        qb = qf.from(dataStore.getPersistentClass());
+        primaryFieldName = dataStore.getPrimaryFieldName();
 	}
 
     // FIXME how to handle a specific key, or a key range ?
     public void build(){
+
+        FilterConditionContext context = null;
 
         if(q!=null)
             throw new IllegalAccessError("Already built");
@@ -48,22 +55,22 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
             Object loperand = mfilter.getOperands().get(0); // FIXME following the implementation of HBase.
             switch (mfilter.getFilterOp()) {
                 case EQUALS:
-                    qf.having(mfilter.getFieldName()).eq(loperand);
+                    context = qb.having(mfilter.getFieldName()).eq(loperand);
                     break;
                 case NOT_EQUALS:
-                    qf.not().having(mfilter.getFieldName()).eq(loperand);
+                    context = qb.not().having(mfilter.getFieldName()).eq(loperand);
                     break;
                 case LESS:
-                    qf.having(mfilter.getFieldName()).lt(loperand);
+                    context = qb.having(mfilter.getFieldName()).lt(loperand);
                     break;
                 case LESS_OR_EQUAL:
-                    qf.having(mfilter.getFieldName()).lte(loperand);
+                    context = qb.having(mfilter.getFieldName()).lte(loperand);
                     break;
                 case GREATER:
-                    qf.having(mfilter.getFieldName()).gt(loperand);
+                    context = qb.having(mfilter.getFieldName()).gt(loperand);
                     break;
                 case GREATER_OR_EQUAL:
-                    qf.having(mfilter.getFieldName()).gte(loperand);
+                    context = qb.having(mfilter.getFieldName()).gte(loperand);
                     break;
                 default:
                     LOG.error("FilterOp not supported..");
@@ -71,18 +78,62 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
             }
 
         } else if (filter instanceof  SingleFieldValueFilter){
+            SingleFieldValueFilter sfilter = (SingleFieldValueFilter) filter;
+            Object loperand = sfilter.getOperands().get(0);
+            switch (sfilter.getFilterOp()) {
+                case EQUALS:
+                    context = qb.having(sfilter.getFieldName()).eq(loperand);
+                    break;
+                case NOT_EQUALS:
+                    context = qb.not().having(sfilter.getFieldName()).eq(loperand);
+                    break;
+                case LESS:
+                    context = qb.having(sfilter.getFieldName()).lt(loperand);
+                    break;
+                case LESS_OR_EQUAL:
+                    context = qb.having(sfilter.getFieldName()).lte(loperand);
+                    break;
+                case GREATER:
+                    context = qb.having(sfilter.getFieldName()).gt(loperand);
+                    break;
+                case GREATER_OR_EQUAL:
+                    context = qb.having(sfilter.getFieldName()).gte(loperand);
+                    break;
+                default:
+                    LOG.error("FilterOp not supported..");
+                    break;
+            }
 
-        } else{
+        } else if (filter!=null) {
             LOG.error("Filter not supported.");
         }
 
-        q = qf.from(dataStore.getPersistentClass()).build();
+        if (this.startKey==this.endKey && this.startKey != null ){
+            (context == null ? qb : context.and()).having(primaryFieldName).eq(this.startKey);
+        }else{
+            if (this.startKey!=null)
+                context = (context == null ? qb : context.and()).having(primaryFieldName).gte(this.startKey);
+            if (this.endKey!=null)
+                (context == null ? qb : context.and()).having(primaryFieldName).lte(this.endKey);
+        }
+
+        q = qb.build();
+    }
+
+    public void project(String[] fields){
+        if(q!=null)
+            throw new IllegalAccessError("Already built");
+        qb.setProjection(fields);
     }
 
     public List<T> list(){
         if(q==null)
             throw new IllegalAccessError("Build before list.");
         return q.list();
+    }
+
+    public int getResultSize(){
+        return q.getResultSize();
     }
 
 }

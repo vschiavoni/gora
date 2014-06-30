@@ -23,21 +23,24 @@
 
 package org.apache.gora.infinispan;
 
-import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.store.InfinispanStore;
+import org.apache.gora.persistency.Persistent;
+import org.apache.gora.store.DataStore;
+import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.cache.IndexingConfiguration;
 import org.infinispan.manager.EmbeddedCacheManager;
-// Logging imports
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
+
+// Logging imports
 
 /**
  * Helper class for third party tests using gora-infinispan backend.
@@ -114,4 +117,19 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 		Configuration c = new Configuration();
 		return c;
 	}
+
+    @Override
+    public<K, T extends Persistent> DataStore<K,T>
+    createDataStore(Class<K> keyClass, Class<T> persistentClass) throws GoraException {
+        InfinispanStore store = (InfinispanStore) super.createDataStore(keyClass, persistentClass);
+        if (persistentClass.equals(Employee.class)) {
+            store.setPrimaryFieldName("ssn");
+            store.setPrimaryFieldPos(3);
+        }else  if(persistentClass.equals(WebPage.class)) {
+            store.setPrimaryFieldName("url");
+            store.setPrimaryFieldPos(1);
+        }
+        return store;
+    }
+
 }
