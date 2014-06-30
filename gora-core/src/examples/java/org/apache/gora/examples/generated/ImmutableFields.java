@@ -11,7 +11,6 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
 
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    __G__DIRTY(0, "__g__dirty"),
     V1(1, "v1"),
     V2(2, "v2"),
     ;
@@ -52,7 +51,6 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
   };
 
   public static final String[] _ALL_FIELDS = {
-  "__g__dirty",
   "v1",
   "v2",
   };
