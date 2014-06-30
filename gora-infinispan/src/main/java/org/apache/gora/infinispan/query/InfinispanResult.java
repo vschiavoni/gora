@@ -29,7 +29,7 @@ public class InfinispanResult<K, T extends PersistentBase> extends ResultBase<K,
 
 	@Override
 	protected boolean nextInner() throws IOException {
-        if(current==list.size()-1)
+        if(current==list.size())
             return false;
         persistent = list.get(current);
         current++;

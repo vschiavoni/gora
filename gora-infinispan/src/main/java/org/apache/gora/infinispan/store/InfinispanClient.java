@@ -22,13 +22,10 @@ import org.apache.gora.persistency.impl.PersistentBase;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.query.remote.client.avro.AvroMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 import java.util.Properties;
 
 public class InfinispanClient<K, T extends PersistentBase> {
@@ -50,27 +47,15 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		this.persistentClass = persistentClass;
 
 		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
-        AvroMarshaller<T> marshaller = new AvroMarshaller<T>(persistentClass);
 		clientBuilder
                 .addServer()
                 .host("127.0.0.1")
                 .port(15233)
-                .marshaller(marshaller);
+                .marshaller(new AvroMarshaller<T>(persistentClass));
 		cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
         cacheManager.start();
         cache = cacheManager.getCache();
-        System.out.println("HERE => "+persistentClass.getCanonicalName());
-        ProtoStreamMarshaller.getSerializationContext(cacheManager)
-                .registerMarshaller(persistentClass, marshaller);
 	}
-	
-	 private static ObjectName createObjectName(String name) {
-	      try {
-	         return new ObjectName(name);
-		} catch (MalformedObjectNameException e) {
-	         throw new RuntimeException(e);
-	      }
-	   }
 
 
 	/**
@@ -88,12 +73,9 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	 * Check if keyspace already exists. If not, create it.
 	 */
 	public void checkKeyspace() {
-		RemoteCache<Object, Object> remoteCache = cacheManager
-				.getCache(getKeyspaceName());
+		RemoteCache<Object, Object> remoteCache = cacheManager.getCache(getKeyspaceName());
 		if (remoteCache == null) {
-			// TODO there is no way via hot-rod to create a remote cache..what
-			// do we do here ?
-			// Pierre suggests to go via JMX
+            throw new RuntimeException("NYI");
 		}
 	}
 
@@ -101,15 +83,12 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	 * Drop keyspace.
 	 */
 	public void dropKeyspace() {
-
-		// via hot-rod we cannot delete caches, what do we do ? JMX again ?
-
+        cache.clear();
 	}
 
 	public void deleteByKey(K key) {
-		throw new UnsupportedOperationException(
-				"To be implemented yet");
-	}
+        cache.remove(key);
+    }
 
 	public void putInCache(K key, T val) {
 		this.cache.put(key, val);
