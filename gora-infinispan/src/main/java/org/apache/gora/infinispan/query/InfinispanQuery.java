@@ -17,6 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 
+/*
+ * * @author Pierre Sutra, valerio schiavoni
+ */
 public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T> {
 
     public static final Logger LOG = LoggerFactory.getLogger(InfinispanQuery.class);
@@ -32,10 +35,7 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
 			throw new IllegalArgumentException("Illegal datastore, value is null");
 		}
 		InfinispanStore<K,T> infinispanStore = (InfinispanStore<K,T>)dataStore;
-		if (infinispanStore.isInitialized()!=true){
-			throw new IllegalStateException("Cannot execute query for not-initialized datastore");
-		}
-        InfinispanClient<K,T> client = infinispanStore.getClient();       
+        InfinispanClient<K,T> client = infinispanStore.getClient();
 		RemoteCache<K,T> remoteCache = client.getCache();
 		qf = Search.getQueryFactory(remoteCache);
         qb = qf.from(dataStore.getPersistentClass());
@@ -47,8 +47,10 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
 
         FilterConditionContext context = null;
 
-        if(q!=null)
-            throw new IllegalAccessError("Already built");
+        if(q!=null){
+            LOG.warn("Query already built; ignoring");
+            return;
+        }
 
         if (filter instanceof  MapFieldValueFilter){
             MapFieldValueFilter mfilter = (MapFieldValueFilter) filter;

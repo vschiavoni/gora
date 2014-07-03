@@ -48,7 +48,9 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheCon
  * @see GoraTestDriver for test specifics. This driver is the base for all test
  *      cases that require an embedded Infinispan server. It starts (setUp) and
  *      stops (tearDown) embedded Infinispan server.
- * 
+ *
+ * * @author Pierre Sutra, valerio schiavoni
+ *
  */
 
 public class GoraInfinispanTestDriver extends GoraTestDriver {
@@ -100,6 +102,10 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 					CacheMode.REPL_SYNC, false);
             defaultClusteredCacheConfig.indexing().enable();
             defaultClusteredCacheConfig.jmxStatistics().disable();
+            defaultClusteredCacheConfig.indexing()
+                    .addProperty("default.directory_provider", "ram")
+                    .addProperty("lucene_version", "LUCENE_CURRENT");
+
             ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
 
 			createHotRodServers(NCACHES, builder);

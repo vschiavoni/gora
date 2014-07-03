@@ -1,5 +1,6 @@
 package org.apache.gora.infinispan.query;
 
+import org.apache.gora.infinispan.store.InfinispanStore;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
@@ -8,7 +9,9 @@ import java.io.IOException;
 import java.util.List;
 
 /*
-* TODO implements a lazy retrieval of the results (if possible over HotRod).
+ * @author Pierre Sutra, valerio schiavoni
+ * TODO implements a lazy retrieval of the results (if possible over HotRod).
+ *
  */
 public class InfinispanResult<K, T extends PersistentBase> extends ResultBase<K, T>  {
 
@@ -32,6 +35,7 @@ public class InfinispanResult<K, T extends PersistentBase> extends ResultBase<K,
         if(current==list.size())
             return false;
         persistent = list.get(current);
+        key = (K) list.get(current).get(((InfinispanStore<K,T>)dataStore).getPrimaryFieldName());
         current++;
         return true;
     }

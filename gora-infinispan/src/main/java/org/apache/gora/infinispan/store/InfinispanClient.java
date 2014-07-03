@@ -29,6 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
+/*
+ * * @author Pierre Sutra, valerio schiavoni
+ */
 public class InfinispanClient<K, T extends PersistentBase> {
 
     public static final Logger LOG = LoggerFactory.getLogger(InfinispanClient.class);
@@ -38,9 +41,10 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	private RemoteCacheManager cacheManager;
     private Schema schema;
 
-	private RemoteCache<K, T> cache; // TODO use as types the keyClass clazz
+	private RemoteCache<K, T> cache;
+    private boolean cacheExists;
 
-	public void initialize(Class<K> keyClass, Class<T> persistentClass,
+    public void initialize(Class<K> keyClass, Class<T> persistentClass,
                            Properties properties) throws Exception {
 
 		LOG.info("Initializing InfinispanClient");
@@ -57,35 +61,25 @@ public class InfinispanClient<K, T extends PersistentBase> {
                 .marshaller(new AvroMarshaller<T>(persistentClass));
 		cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
         cacheManager.start();
-        cache = cacheManager.getCache();
+        cache = cacheManager.getCache(); // FIXME
 	}
 
-
-	/**
-	 * Check if keyspace already exists. In the case of Infinispan, check if a
-	 * cache with the same name already exists.
-	 */
-	public boolean keyspaceExists() {
-		if (cacheManager.getCache(getKeyspaceName()) != null) {
-			return true;
-		}
-		return false;
+	public boolean cacheExists() {
+		return cacheExists;
 	}
 
 	/**
-	 * Check if keyspace already exists. If not, create it.
+	 * Check if cache already exists. If not, create it.
 	 */
-	public void checkKeyspace() {
-		RemoteCache<Object, Object> remoteCache = cacheManager.getCache(getKeyspaceName());
-		if (remoteCache == null) {
-            throw new RuntimeException("NYI");
-		}
+	public void createCache() {
+        cacheExists = true; // FIXME
 	}
 
 	/**
 	 * Drop keyspace.
 	 */
-	public void dropKeyspace() {
+	public void dropCache() {
+        cacheExists = false; // FIXME
         cache.clear();
 	}
 
@@ -97,12 +91,11 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		this.cache.put(key, val);
 	}
 
-	/**
-	 * Obtain Schema/Keyspace name
-	 * 
-	 * @return Keyspace
-	 */
-	public String getKeyspaceName() {
+    public T getInCache(K key){
+        return cache.get(key);
+    }
+
+	public String getCacheName() {
 		return this.keyClass.getName();
 	}
 
@@ -117,10 +110,5 @@ public class InfinispanClient<K, T extends PersistentBase> {
 	public RemoteCache<K, T> getCache() {
 		return this.cache;
 	}
-
-    //
-    // HELPERS
-    //
-
 
 }

@@ -19,6 +19,7 @@
 package org.apache.gora.infinispan.store;
 
 import org.apache.avro.Schema;
+import org.apache.gora.infinispan.query.InfinispanPartitionQuery;
 import org.apache.gora.infinispan.query.InfinispanQuery;
 import org.apache.gora.infinispan.query.InfinispanResult;
 import org.apache.gora.persistency.impl.PersistentBase;
@@ -30,13 +31,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * {@link org.apache.gora.infinispan.store.InfinispanStore} is the primary class
  * responsible for directing Gora CRUD operations into Infinispan. We (delegate) rely
  * heavily on {@link org.apache.gora.infinispan.store.InfinispanClient} for many operations
  * such as initialization, creating and deleting schemas (Infinispan caches), etc.
+ *
+ * @author Pierre Sutra, valerio schiavoni
+ *
  */
 public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<K, T> {
 
@@ -48,16 +54,6 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     private InfinispanClient<K, T> infinispanClient = new InfinispanClient<K, T>();
     private String primaryFieldName;
     private int primaryFieldPos;
-    private boolean initialized = false;
-    /**
-     * The values are cache entries pending to be stored.
-     * <p/>
-     * We want to iterate over the keys in insertion order.
-     * We don't want to lock the entire collection before iterating over the keys,
-     * since in the meantime other threads are adding entries to the map.
-     */
-    private Map<K, T> buffer = Collections.synchronizedMap(new LinkedHashMap<K, T>());
-
     /**
      * The default constructor for InfinispanStore
      */
@@ -72,11 +68,12 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
             super.initialize(keyClass, persistentClass, properties);
 
             LOG.info("InfinispanStore initializing with key class: "
-                    + keyClass.getCanonicalName() + " and persistent class:"
+                    + keyClass.getCanonicalName()
+                    + " and persistent class:"
                     + persistentClass.getCanonicalName());
 
-            T t = persistentClass.newInstance();
-            for (Schema.Field f : t.getSchema().getFields()){
+            schema = persistentClass.newInstance().getSchema();
+            for (Schema.Field f : schema.getFields()){
                 if (f.aliases().contains("primary")) {
                     if (primaryFieldName != null){
                         primaryFieldName = f.name();
@@ -90,8 +87,6 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
             LOG.warn("Cannot infer primary key from schema.");
 
             this.infinispanClient.initialize(keyClass, persistentClass, properties);
-
-            initialized = true;
 
         } catch (Exception e) {
             LOG.error(e.getMessage());
@@ -109,7 +104,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     @Override
     public void createSchema() {
         LOG.debug("creating Infinispan keyspace");
-        this.infinispanClient.checkKeyspace();
+        this.infinispanClient.createCache();
     }
 
     @Override
@@ -131,7 +126,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     @Override
     public void deleteSchema() {
         LOG.debug("delete schema");
-        this.infinispanClient.dropKeyspace();
+        this.infinispanClient.dropCache();
     }
 
     /**
@@ -139,66 +134,49 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
      */
     @Override
     public Result<K, T> execute(Query<K, T> query) {
-        return new InfinispanResult<K, T>(this, (InfinispanQuery<K, T>) query);
+        return new InfinispanResult<K, T>(this, (InfinispanQuery<K,T>)query);
     }
 
-
-    /**
-     * Flush the buffer which is a synchronized {@link java.util.LinkedHashMap}
-     * storing fields pending to be stored by
-     * {@link org.apache.gora.infinispan.store.InfinispanStore#put(Object, PersistentBase)}
-     * operations. Invoking this method therefore writes the buffered entries into Infinispan.
-     *
-     * @see org.apache.gora.store.DataStore#flush()
-     */
     @Override
-    public void flush() {
-
-        Set<K> keys = this.buffer.keySet();
-
-        // this duplicates memory footprint
-        @SuppressWarnings("unchecked")
-        K[] keyArray = (K[]) keys.toArray();
-
-        // iterating over the key set directly would throw
-        //ConcurrentModificationException with java.util.HashMap and subclasses
-        for (K key : keyArray) {
-            T value = this.buffer.get(key);
-            if (value == null) {
-                LOG.info("Value to update is null for key: " + key);
-                continue;
-            }
-//      Schema schema = value.getSchema(); 
-//      for (Field field: schema.getFields()) {
-//        if (value.isDirty(field.pos())) {
-//          addOrUpdateField(key, field, field.schema(), value.get(field.pos()));
-//        }
-//      }
-        }
-
-        // remove flushed rows from the buffer as all
-        // added or updated fields should now have been written.
-        for (K key : keyArray) {
-            this.buffer.remove(key);
-        }
+    public T get(K key){
+        return infinispanClient.getInCache(key);
     }
 
     @Override
     public T get(K key, String[] fields) {
+
+        if (fields==null)
+            return infinispanClient.getInCache(key);
+
         InfinispanQuery query = new InfinispanQuery(this);
         query.setKey(key);
         query.project(fields);
         query.build();
+
         List<T> l = query.list();
+        assert l.isEmpty() || l.size()==1;
         if (l.isEmpty())
             return null;
+
         return l.get(0);
+
     }
 
     @Override
     public List<PartitionQuery<K, T>> getPartitions(Query<K, T> query)
             throws IOException {
-        throw new UnsupportedOperationException();
+        List<PartitionQuery<K,T>> partitionQueries = new ArrayList<PartitionQuery<K, T>>();
+        InfinispanPartitionQuery<K,T> partitionQuery = new InfinispanPartitionQuery<K,T>((InfinispanStore<K,T>) query.getDataStore());
+        partitionQuery.setFilter(query.getFilter());
+        partitionQuery.setFields(query.getFields());
+        partitionQuery.setKeyRange(query.getStartKey(),query.getEndKey());
+        partitionQueries.add(partitionQuery);
+        return partitionQueries;
+    }
+
+    @Override
+    public void flush() {
+        LOG.info("No caching done yet.");
     }
 
     /**
@@ -208,7 +186,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
      */
     @Override
     public String getSchemaName() {
-        return this.infinispanClient.getKeyspaceName();
+        return this.infinispanClient.getCacheName();
     }
 
     @Override
@@ -231,15 +209,11 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     @Override
     public boolean schemaExists() {
         LOG.info("schema exists");
-        return infinispanClient.keyspaceExists();
+        return infinispanClient.cacheExists();
     }
 
     public InfinispanClient<K, T> getClient() {
         return infinispanClient;
-    }
-
-    public boolean isInitialized() {
-        return initialized;
     }
 
     public String getPrimaryFieldName() {
