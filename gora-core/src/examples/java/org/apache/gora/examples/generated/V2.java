@@ -10,7 +10,6 @@ public class V2 extends org.apache.gora.persistency.impl.PersistentBase implemen
 
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    __G__DIRTY(0, "__g__dirty"),
     V3(1, "v3"),
     ;
     /**
@@ -50,7 +49,6 @@ public class V2 extends org.apache.gora.persistency.impl.PersistentBase implemen
   };
 
   public static final String[] _ALL_FIELDS = {
-  "__g__dirty",
   "v3",
   };
 

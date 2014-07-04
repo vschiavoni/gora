@@ -10,7 +10,6 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
 
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    __G__DIRTY(0, "__g__dirty"),
     COUNT(1, "count"),
     ;
     /**
@@ -50,7 +49,6 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
   };
 
   public static final String[] _ALL_FIELDS = {
-  "__g__dirty",
   "count",
   };
 

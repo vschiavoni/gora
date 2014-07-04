@@ -10,7 +10,6 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
 
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    __G__DIRTY(0, "__g__dirty"),
     URL(1, "url"),
     CONTENT(2, "content"),
     PARSED_CONTENT(3, "parsedContent"),
@@ -55,7 +54,6 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
   };
 
   public static final String[] _ALL_FIELDS = {
-  "__g__dirty",
   "url",
   "content",
   "parsedContent",

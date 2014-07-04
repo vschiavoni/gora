@@ -10,7 +10,6 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
 
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    __G__DIRTY(0, "__g__dirty"),
     NAME(1, "name"),
     DATE_OF_BIRTH(2, "dateOfBirth"),
     SSN(3, "ssn"),
@@ -55,7 +54,6 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
   };
 
   public static final String[] _ALL_FIELDS = {
-  "__g__dirty",
   "name",
   "dateOfBirth",
   "ssn",
