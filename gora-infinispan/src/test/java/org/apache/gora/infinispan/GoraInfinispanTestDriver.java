@@ -27,18 +27,16 @@ import org.apache.gora.GoraTestDriver;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.store.InfinispanStore;
+import org.apache.gora.persistency.Persistent;
+import org.apache.gora.store.DataStore;
+import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.jmx.PerThreadMBeanServerLookup;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.query.remote.ProtobufMetadataManagerMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.JMX;
-import javax.management.MBeanServer;
 
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 
@@ -50,7 +48,9 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheCon
  * @see GoraTestDriver for test specifics. This driver is the base for all test
  *      cases that require an embedded Infinispan server. It starts (setUp) and
  *      stops (tearDown) embedded Infinispan server.
- * 
+ *
+ * * @author Pierre Sutra, valerio schiavoni
+ *
  */
 
 public class GoraInfinispanTestDriver extends GoraTestDriver {
@@ -102,7 +102,12 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 					CacheMode.REPL_SYNC, false);
             defaultClusteredCacheConfig.indexing().enable();
             defaultClusteredCacheConfig.jmxStatistics().disable();
+            defaultClusteredCacheConfig.indexing()
+                    .addProperty("default.directory_provider", "ram")
+                    .addProperty("lucene_version", "LUCENE_CURRENT");
+
             ConfigurationBuilder builder = hotRodCacheConfiguration(defaultClusteredCacheConfig);
+
 			createHotRodServers(NCACHES, builder);
 			for (EmbeddedCacheManager m : cacheManagers) {				
 				m.defineConfiguration(String.class.getCanonicalName(), builder.build());
@@ -118,4 +123,19 @@ public class GoraInfinispanTestDriver extends GoraTestDriver {
 		Configuration c = new Configuration();
 		return c;
 	}
+
+    @Override
+    public<K, T extends Persistent> DataStore<K,T>
+    createDataStore(Class<K> keyClass, Class<T> persistentClass) throws GoraException {
+        InfinispanStore store = (InfinispanStore) super.createDataStore(keyClass, persistentClass);
+        if (persistentClass.equals(Employee.class)) {
+            store.setPrimaryFieldName("ssn");
+            store.setPrimaryFieldPos(3);
+        }else  if(persistentClass.equals(WebPage.class)) {
+            store.setPrimaryFieldName("url");
+            store.setPrimaryFieldPos(1);
+        }
+        return store;
+    }
+
 }
