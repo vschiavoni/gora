@@ -15,7 +15,8 @@ public class InfinispanPartitionQuery<K,T extends PersistentBase> extends Infini
 
     private static final String[] location={"local"};
 
-
+    public InfinispanPartitionQuery(){
+    }
 
     public InfinispanPartitionQuery(InfinispanStore<K,T> store) {
         super(store);

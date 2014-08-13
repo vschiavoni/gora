@@ -29,23 +29,22 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
     private QueryBuilder qb;
     private String primaryFieldName;
 
+    public InfinispanQuery(){
+        super(null);
+    }
+
 	public InfinispanQuery(InfinispanStore<K, T> dataStore) {
 		super(dataStore);
-		if (dataStore==null){
-			throw new IllegalArgumentException("Illegal datastore, value is null");
-		}
-		InfinispanStore<K,T> infinispanStore = (InfinispanStore<K,T>)dataStore;
-        InfinispanClient<K,T> client = infinispanStore.getClient();
-		RemoteCache<K,T> remoteCache = client.getCache();
-		qf = Search.getQueryFactory(remoteCache);
-        qb = qf.from(dataStore.getPersistentClass());
-        primaryFieldName = dataStore.getPrimaryFieldName();
+
 	}
 
     // FIXME how to handle a specific key, or a key range ?
     public void build(){
 
         FilterConditionContext context = null;
+
+        if(qb==null)
+            init();
 
         if(q!=null){
             LOG.warn("Query already built; ignoring");
@@ -123,6 +122,8 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
     }
 
     public void project(String[] fields){
+        if(qb==null)
+            init();
         if(q!=null)
             throw new IllegalAccessError("Already built");
         qb.setProjection(fields);
@@ -136,6 +137,14 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
 
     public int getResultSize(){
         return q.getResultSize();
+    }
+
+    private void init(){
+        InfinispanClient<K,T> client = ((InfinispanStore<K,T>)dataStore).getClient();
+        primaryFieldName = ((InfinispanStore<K,T>)dataStore).getPrimaryFieldName();
+        RemoteCache<K,T> remoteCache = client.getCache();
+        qf = Search.getQueryFactory(remoteCache);
+        qb = qf.from(dataStore.getPersistentClass());
     }
 
 }

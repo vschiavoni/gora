@@ -84,7 +84,11 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
                 }
             }
 
-            LOG.warn("Cannot infer primary key from schema.");
+            if (primaryFieldName == null) {
+                primaryFieldPos = 1;
+                primaryFieldName = schema.getFields().get(1).name();
+                LOG.warn("Cannot infer primary key from schema; using field "+primaryFieldName);
+            }
 
             this.infinispanClient.initialize(keyClass, persistentClass, properties);
 

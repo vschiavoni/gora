@@ -36,6 +36,9 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
     public static final Logger LOG = LoggerFactory.getLogger(InfinispanClient.class);
 
+    private static final String HOTROD_DEFAULT_HOST = "127.0.0.1";
+    private static final String HOTROD_DEFAULT_PORT = "15233";
+
     private Class<K> keyClass;
 	private Class<T> persistentClass;
 	private RemoteCacheManager cacheManager;
@@ -49,6 +52,9 @@ public class InfinispanClient<K, T extends PersistentBase> {
 
 		LOG.info("Initializing InfinispanClient");
 
+        String host = System.getProperty("hotrod_host",HOTROD_DEFAULT_HOST);
+        int port = Integer.valueOf(System.getProperty("hotrod_port", HOTROD_DEFAULT_PORT));
+
         this.keyClass = keyClass;
 		this.persistentClass = persistentClass;
         this.schema = persistentClass.newInstance().getSchema();
@@ -56,8 +62,8 @@ public class InfinispanClient<K, T extends PersistentBase> {
 		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
 		clientBuilder
                 .addServer()
-                .host("127.0.0.1")
-                .port(15233)
+                .host(host)
+                .port(port)
                 .marshaller(new AvroMarshaller<T>(persistentClass));
 		cacheManager = new RemoteCacheManager(clientBuilder.build(), true);
         cacheManager.start();

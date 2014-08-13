@@ -26,11 +26,13 @@ package org.apache.gora.infinispan.store;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.infinispan.GoraInfinispanTestDriver;
+import org.apache.gora.mapreduce.MapReduceTestUtils;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 
@@ -53,7 +55,7 @@ public class TestInfinispanStore extends DataStoreTestBase {
 		conf = getTestDriver().getConf();
 	}
 
-	@SuppressWarnings("unchecked")
+	 @SuppressWarnings("unchecked")
 	@Override
 	protected DataStore<String, Employee> createEmployeeDataStore()
 			throws IOException {
@@ -62,7 +64,7 @@ public class TestInfinispanStore extends DataStoreTestBase {
 		assertNotNull(employeeDataStore);
 		employeeDataStore.initialize(String.class, Employee.class, null);
 		return employeeDataStore;
-	}
+    }
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -74,17 +76,26 @@ public class TestInfinispanStore extends DataStoreTestBase {
 		return webPageDataStore;
 	}
 
-	public GoraInfinispanTestDriver getTestDriver() {
+    @Test
+    public void testCountQuery() throws Exception {
+        MapReduceTestUtils.testCountQuery(webPageStore,
+                testDriver.getConfiguration());
+    }
+
+    public GoraInfinispanTestDriver getTestDriver() {
 		return (GoraInfinispanTestDriver) testDriver;
 	}
 
-    public void testUpdate() throws IOException, Exception {
-        // TODO
-    }
-
-	// @Override
-	// public void testGet() throws IOException, Exception {
-	// super.testGet();
-	// }
+//    @Test
+//    public void runServer(){
+//        System.out.println("STARTING SERVER");
+//        synchronized(this){
+//            try{
+//                this.wait();
+//            }catch(InterruptedException e){
+//                // ignore this'
+//            }
+//        }
+//    }
 
 }
