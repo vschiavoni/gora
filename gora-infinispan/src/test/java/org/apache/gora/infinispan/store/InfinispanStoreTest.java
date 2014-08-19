@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Test for {@link InfinispanStore}.
  */
-public class TestInfinispanStore extends DataStoreTestBase {
+public class InfinispanStoreTest extends DataStoreTestBase {
 
 	private Configuration conf;
 
@@ -86,16 +86,19 @@ public class TestInfinispanStore extends DataStoreTestBase {
 		return (GoraInfinispanTestDriver) testDriver;
 	}
 
-//    @Test
-//    public void runServer(){
-//        System.out.println("STARTING SERVER");
-//        synchronized(this){
-//            try{
-//                this.wait();
-//            }catch(InterruptedException e){
-//                // ignore this'
-//            }
-//        }
-//    }
+    @Test
+    public void runServer(){
+        System.out.println("STARTING SERVER");
+        synchronized(this){
+            try{
+                this.wait();
+            }catch(InterruptedException e){
+                // ignore this'
+            } catch (Exception e) {
+                e.printStackTrace();  // TODO: Customise this generated block
+            }
+        }
+    }
+
 
 }

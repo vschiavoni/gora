@@ -61,9 +61,14 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
     }
 
     @Override
-    public void initialize(Class<K> keyClass, Class<T> persistentClass, Properties properties) {
+    public synchronized void initialize(Class<K> keyClass, Class<T> persistentClass, Properties properties) {
 
         try {
+
+            if (primaryFieldName!=null) {
+                LOG.info("Already initialized; ignoring.");
+                return;
+            }
 
             super.initialize(keyClass, persistentClass, properties);
 
@@ -73,6 +78,7 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
                     + persistentClass.getCanonicalName());
 
             schema = persistentClass.newInstance().getSchema();
+
             for (Schema.Field f : schema.getFields()){
                 if (f.aliases().contains("primary")) {
                     if (primaryFieldName != null){
@@ -87,7 +93,9 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
             if (primaryFieldName == null) {
                 primaryFieldPos = 1;
                 primaryFieldName = schema.getFields().get(1).name();
-                LOG.warn("Cannot infer primary key from schema; using field "+primaryFieldName);
+                LOG.warn("Cannot infer primary key from schema; using field \""+primaryFieldName+"\"");
+            } else {
+                LOG.info("Primary key from schema is \""+primaryFieldName+"\"");
             }
 
             this.infinispanClient.initialize(keyClass, persistentClass, properties);
@@ -202,6 +210,13 @@ public class InfinispanStore<K, T extends PersistentBase> extends DataStoreBase<
 
     @Override
     public void put(K key, T value) {
+        LOG.debug("put "+key.toString()+"=>"+value.toString());
+        if (value.get(primaryFieldPos)==null) {
+            LOG.warn("Invalid primary field !");
+        } else if (!value.get(primaryFieldPos).equals(key)){
+            LOG.warn("Primary field and key differs !");
+        }
+        value.put(primaryFieldPos,key);
         this.infinispanClient.putInCache(key, value);
     }
 

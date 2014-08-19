@@ -112,10 +112,12 @@ public class InfinispanQuery<K, T extends PersistentBase> extends QueryBase<K, T
         if (this.startKey==this.endKey && this.startKey != null ){
             (context == null ? qb : context.and()).having(primaryFieldName).eq(this.startKey);
         }else{
-            if (this.startKey!=null)
-                context = (context == null ? qb : context.and()).having(primaryFieldName).gte(this.startKey);
-            if (this.endKey!=null)
-                (context == null ? qb : context.and()).having(primaryFieldName).lte(this.endKey);
+            if (this.startKey!=null && this.endKey!=null)
+                context = (context == null ? qb : context.and()).having(primaryFieldName).between(this.startKey,this.endKey);
+            else if (this.startKey!=null)
+                context = (context == null ? qb : context.and()).having(primaryFieldName).between(this.startKey,null);
+            else if (this.endKey!=null)
+                (context == null ? qb : context.and()).having(primaryFieldName).between(null,this.endKey);
         }
 
         q = qb.build();
